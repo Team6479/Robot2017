@@ -122,7 +122,7 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void teleopPeriodic() {
-		 
+		
 		//get the y axis of both joysticks
 		Double leftPower = leftStick.getY();
 		Double rightPower = rightStick.getY();
