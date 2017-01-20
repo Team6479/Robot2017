@@ -27,9 +27,12 @@ public class Robot extends IterativeRobot {
 	final String customAuto = "My Auto";
 	String autoSelected;
 	SendableChooser<String> chooser = new SendableChooser<>();
+	//thread for camera
 	Thread visionThread;
+	//the joysticks
 	Joystick rightStick = new Joystick(0);
 	Joystick leftStick = new Joystick(1);
+	//the motor controllers for the drive train
 	Spark rightDrive = new Spark(0);
 	Spark leftDrive = new Spark(1);
 
@@ -120,8 +123,10 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void teleopPeriodic() {
 		
+		//get the y axis of both joysticks
 		Double leftPower = leftStick.getY();
 		Double rightPower = rightStick.getY();
+		//set the drive power to the joysticks axis
 		leftDrive.set(leftPower);
 		rightDrive.set(rightPower);
 	}
