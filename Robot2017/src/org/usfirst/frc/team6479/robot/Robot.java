@@ -31,11 +31,11 @@ public class Robot extends IterativeRobot {
 	//thread for camera
 	Thread visionThread;
 	//the joysticks
-	Joystick rightStick = new Joystick(0);
-	Joystick leftStick = new Joystick(1);
+	Joystick rightStick = new Joystick(1);
+	Joystick leftStick = new Joystick(0);
 	//the motor controllers for the drive train
-	Spark rightDrive = new Spark(0);
-	Spark leftDrive = new Spark(1);
+	Spark leftDrive = new Spark(0);
+	Spark rightDrive = new Spark(1);
 
 	/**
 	 * This function is run when the robot is first started up and should be
@@ -128,7 +128,7 @@ public class Robot extends IterativeRobot {
 		Double leftPower = leftStick.getY();
 		Double rightPower = rightStick.getY();
 		//set the drive power to the joysticks axis
-		leftDrive.set(leftPower);
+		leftDrive.set(leftPower * -1);
 		rightDrive.set(rightPower);
 	}
 
