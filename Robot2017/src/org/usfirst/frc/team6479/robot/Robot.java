@@ -128,6 +128,7 @@ public class Robot extends IterativeRobot {
 		Double leftPower = leftStick.getY();
 		Double rightPower = rightStick.getY();
 		//set the drive power to the joysticks axis
+		//left drive is inverted since both motors are built identical
 		leftDrive.set(leftPower * -1);
 		rightDrive.set(rightPower);
 	}
