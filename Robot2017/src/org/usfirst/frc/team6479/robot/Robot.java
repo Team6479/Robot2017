@@ -9,7 +9,9 @@ import edu.wpi.cscore.CvSink;
 import edu.wpi.cscore.CvSource;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.wpilibj.CameraServer;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Spark;
@@ -50,6 +52,11 @@ public class Robot extends IterativeRobot {
 	//the motor controllers for the drive train
 	Spark leftDrive = new Spark(0);
 	Spark rightDrive = new Spark(1);
+	
+	//enums for left and right
+	public enum Hand {
+		LEFT, RIGHT
+	}
 
 	/**
 	 * This function is run when the robot is first started up and should be
@@ -154,26 +161,57 @@ public class Robot extends IterativeRobot {
 		//rightDrive.set(rightPower);
 		
 		//if both are being used, right joystick has priority over left joystick and is called fullDrive
-		if(isJoystickMoving(GenericHID.Hand.kRight) && isJoystickMoving(GenericHID.Hand.kLeft)) {
+		/*if(isJoystickMoving(GenericHID.Hand.kRight) && isJoystickMoving(GenericHID.Hand.kLeft)) {
 			fullDrive();
-		}
+		}*/
 		//if the right joystick is being used, call fullDrive
-		else if(isJoystickMoving(GenericHID.Hand.kRight)) {
+		if(isJoystickMoving(Hand.RIGHT)) {
 			fullDrive();
+			//xbox.setRumble(RumbleType.kRightRumble, 1);
 		}
 		//if the left joystick is being used, call fineDrive
-		else if(isJoystickMoving(GenericHID.Hand.kLeft)) {
+		else if(isJoystickMoving(Hand.LEFT)) {
+			//xbox.setRumble(RumbleType.kLeftRumble, 1);
 			fineDrive();
 		}
 	}
 	
+	//get a vector of the left stick value
+	public Point leftStick() {
+		//x axis's raw value is 0
+		//y axis's raw value is 1
+		double x = xbox.getRawAxis(0);
+		double y = xbox.getRawAxis(1);
+		return new Point(x, y);
+	}
+	
+	//get a vector of the right stick value
+	public Point rightStick() {
+		//x axis's raw value is 1
+		//y axis's raw value is 2
+		double x = xbox.getRawAxis(4);
+		double y = xbox.getRawAxis(5);
+		return new Point(x, y);
+	}
+	
 	//determine if joystick is being moved
 	//param is which joystick on controller
-	public boolean isJoystickMoving(GenericHID.Hand hand) {
-		//get the x and invert it
-		double x = xbox.getX(hand);
-		//get the y
-		double y = xbox.getY(hand);
+	public boolean isJoystickMoving(Hand hand) {
+		//declare x and y
+		double x = 0;
+		double y = 0;
+		//if its the left hand, get the left joystick values
+		if(hand == Hand.LEFT) {
+			Point v = leftStick();
+			x = v.x;
+			y = v.y;
+		}
+		//if its the right hand, get the right joystick values
+		else if(hand == Hand.RIGHT) {
+				Point v = rightStick();
+				x = v.x;
+				y = v.y;
+		}
 		
 		//is the value of x within .001 of zero
 		boolean isXZero = Math.abs(x) <= .001;
@@ -195,7 +233,7 @@ public class Robot extends IterativeRobot {
 	//gives full control, going from -1 to 1
 	public void fullDrive() {
 		//get the direction and power vector in form (x=right speed, y=left speed)
-		Point powerDirection = powerAndDirection(GenericHID.Hand.kRight);
+		Point powerDirection = powerAndDirection(Hand.RIGHT);
 		//set the speed for both motors as is from vector
 		rightDrive.set(powerDirection.x);
 		leftDrive.set(powerDirection.y);
@@ -206,11 +244,11 @@ public class Robot extends IterativeRobot {
 	//gives fine control, going from -.1 to .1
 	public void fineDrive() {
 		//get the direction and power vector in form (x=right speed, y=left speed)
-		Point powerDirection = powerAndDirection(GenericHID.Hand.kLeft);
+		Point powerDirection = powerAndDirection(Hand.LEFT);
 		
 		//scale the speed
 		//eventually this will get scaling information from driver station or controller, for now just scale to 1/10
-		double scaleFactor = .1;
+		double scaleFactor = .5;
 		double rightSpeed = powerDirection.x * scaleFactor;
 		double leftSpeed = powerDirection.y * scaleFactor;
 		
@@ -223,11 +261,24 @@ public class Robot extends IterativeRobot {
 	//this function calculates what direction the joystick is pointing and how much power it outputs
 	//uses tables and formula from http://home.kendra.com/mauser/Joystick.html
 	//paramaters is which joystick to calculate from, right or left
-	public Point powerAndDirection(GenericHID.Hand hand) {
-		//get the x and invert it
-		double x = xbox.getX(hand) * -1;
-		//get the y
-		double y = xbox.getY(hand);
+	public Point powerAndDirection(Hand hand) {
+		//declare x and y
+		double x = 0;
+		double y = 0;
+		//if its the left hand, get the left joystick values
+		if(hand == Hand.LEFT) {
+			Point v = leftStick();
+			x = v.x;
+			y = v.y;
+		}
+		//if its the right hand, get the right joystick values
+		else if(hand == Hand.RIGHT) {
+				Point v = rightStick();
+				x = v.x;
+				y = v.y;
+		}
+		//invert the x
+		x *= -1;
 		//calculate v and w, these are vars to calc left and right speed
 		//if u want to know more, read the webpage
 		double v = ((1 - Math.abs(x)) * y) + y;
@@ -238,8 +289,7 @@ public class Robot extends IterativeRobot {
 		double l = (v - w) / 2;
 		
 		//vector to hold right and left speed of drivetrain, values from -1 to 1
-		Point powerDirection = new Point(r, l);
-		return powerDirection;
+		return new Point(r, l);
 	}
 
 	/**
@@ -250,4 +300,3 @@ public class Robot extends IterativeRobot {
 		
 	}
 }
-
