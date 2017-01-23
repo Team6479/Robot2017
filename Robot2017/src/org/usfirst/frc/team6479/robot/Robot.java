@@ -9,11 +9,22 @@ import edu.wpi.cscore.CvSink;
 import edu.wpi.cscore.CvSource;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.wpilibj.CameraServer;
+import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Spark;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
+/* TODO
+ * Camera Tracking
+ * User inputed scaling for fineDrive()
+ * Commands for testing robot testing
+ * Test functions
+ * Custom Dashboard
+ * Misc controls for whatever robot needs to do (i.e. climb rope)
+ */
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -22,7 +33,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * creating this project, you must also update the manifest file in the resource
  * directory.
  */
-
 public class Robot extends IterativeRobot {
 	final String defaultAuto = "Default";
 	final String customAuto = "My Auto";
@@ -31,8 +41,12 @@ public class Robot extends IterativeRobot {
 	//thread for camera
 	Thread visionThread;
 	//the joysticks
-	Joystick rightStick = new Joystick(1);
-	Joystick leftStick = new Joystick(0);
+	//Joystick rightStick = new Joystick(1);
+	//Joystick leftStick = new Joystick(0);
+	
+	//xbox cotroller
+	XboxController xbox = new XboxController(0);
+	
 	//the motor controllers for the drive train
 	Spark leftDrive = new Spark(0);
 	Spark rightDrive = new Spark(1);
@@ -46,6 +60,11 @@ public class Robot extends IterativeRobot {
 		chooser.addDefault("Default Auto", defaultAuto);
 		chooser.addObject("My Auto", customAuto);
 		SmartDashboard.putData("Auto choices", chooser);
+		
+		//left drive is inverted since both motors are built identical
+		leftDrive.setInverted(true);
+		
+		//setup camera
 		visionThread = new Thread(() -> {
 			// Get the UsbCamera from CameraServer
 			UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
@@ -100,6 +119,8 @@ public class Robot extends IterativeRobot {
 		// autoSelected = SmartDashboard.getString("Auto Selector",
 		// defaultAuto);
 		System.out.println("Auto selected: " + autoSelected);
+		
+
 	}
 
 	/**
@@ -125,12 +146,100 @@ public class Robot extends IterativeRobot {
 	public void teleopPeriodic() {
 		
 		//get the y axis of both joysticks
-		Double leftPower = leftStick.getY();
-		Double rightPower = rightStick.getY();
+		//double leftPower = leftStick.getY();
+		//double rightPower = rightStick.getY();
 		//set the drive power to the joysticks axis
 		//left drive is inverted since both motors are built identical
-		leftDrive.set(leftPower * -1);
-		rightDrive.set(rightPower);
+		//leftDrive.set(leftPower * -1);
+		//rightDrive.set(rightPower);
+		
+		//if both are being used, right joystick has priority over left joystick and is called fullDrive
+		if(isJoystickMoving(GenericHID.Hand.kRight) && isJoystickMoving(GenericHID.Hand.kLeft)) {
+			fullDrive();
+		}
+		//if the right joystick is being used, call fullDrive
+		else if(isJoystickMoving(GenericHID.Hand.kRight)) {
+			fullDrive();
+		}
+		//if the left joystick is being used, call fineDrive
+		else if(isJoystickMoving(GenericHID.Hand.kLeft)) {
+			fineDrive();
+		}
+	}
+	
+	//determine if joystick is being moved
+	//param is which joystick on controller
+	public boolean isJoystickMoving(GenericHID.Hand hand) {
+		//get the x and invert it
+		double x = xbox.getX(hand);
+		//get the y
+		double y = xbox.getY(hand);
+		
+		//is the value of x within .001 of zero
+		boolean isXZero = Math.abs(x) <= .001;
+		
+		//is the value of y within .001 of zero
+		boolean isYZero = Math.abs(y) <= .001;
+		
+		//if x and y are zero, joystick is not moving, return false
+		if(isXZero && isYZero) {
+			return false;
+		}
+		else {
+			return true;
+		}
+	}
+	
+	//for driving
+	//this function is called when the right joystick on the xbox cotroller is being used
+	//gives full control, going from -1 to 1
+	public void fullDrive() {
+		//get the direction and power vector in form (x=right speed, y=left speed)
+		Point powerDirection = powerAndDirection(GenericHID.Hand.kRight);
+		//set the speed for both motors as is from vector
+		rightDrive.set(powerDirection.x);
+		leftDrive.set(powerDirection.y);
+	}
+	
+	//for driving
+	//this function is called when the left joystick on the xbox cotroller is being used
+	//gives fine control, going from -.1 to .1
+	public void fineDrive() {
+		//get the direction and power vector in form (x=right speed, y=left speed)
+		Point powerDirection = powerAndDirection(GenericHID.Hand.kLeft);
+		
+		//scale the speed
+		//eventually this will get scaling information from driver station or controller, for now just scale to 1/10
+		double scaleFactor = .1;
+		double rightSpeed = powerDirection.x * scaleFactor;
+		double leftSpeed = powerDirection.y * scaleFactor;
+		
+		//set the speed for both motors to scaled speed
+		rightDrive.set(rightSpeed);
+		leftDrive.set(leftSpeed);
+	}
+	
+	//for driving
+	//this function calculates what direction the joystick is pointing and how much power it outputs
+	//uses tables and formula from http://home.kendra.com/mauser/Joystick.html
+	//paramaters is which joystick to calculate from, right or left
+	public Point powerAndDirection(GenericHID.Hand hand) {
+		//get the x and invert it
+		double x = xbox.getX(hand) * -1;
+		//get the y
+		double y = xbox.getY(hand);
+		//calculate v and w, these are vars to calc left and right speed
+		//if u want to know more, read the webpage
+		double v = ((1 - Math.abs(x)) * y) + y;
+		double w = ((1 - Math.abs(y)) * x) + x;
+		//right speed
+		double r = (v + w) / 2;
+		//left speed
+		double l = (v - w) / 2;
+		
+		//vector to hold right and left speed of drivetrain, values from -1 to 1
+		Point powerDirection = new Point(r, l);
+		return powerDirection;
 	}
 
 	/**
