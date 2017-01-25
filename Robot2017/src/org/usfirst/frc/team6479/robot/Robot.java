@@ -151,6 +151,15 @@ public class Robot extends IterativeRobot {
 	}
 
 	/**
+	 * This function is called at the start of operator control
+	 */
+	@Override
+	public void teleopInit() {
+		System.out.println("Left X: " + xbox.getX(Hand.kLeft) + "Left Y: " + xbox.getY(Hand.kLeft));
+		System.out.println("Right X: " + xbox.getX(Hand.kRight) + "Right Y: " + xbox.getY(Hand.kRight));
+	}
+	
+	/**
 	 * This function is called periodically during operator control
 	 */
 	@Override
@@ -167,14 +176,14 @@ public class Robot extends IterativeRobot {
 		//if the right joystick is being used, call fullDrive
 		/*if(isJoystickMoving(Hand.kRight)) {
 			fullDrive();
-			//xbox.setRumble(RumbleType.kRightRumble, 1);
 		}
 		//if the left joystick is being used, call fineDrive
-		else if(isJoystickMoving(Hand.kLeft)) {
-			//xbox.setRumble(RumbleType.kLeftRumble, 1);
+		if(isJoystickMoving(Hand.kLeft)) {
 			fineDrive();
 		}*/
-		fineDrive();
+		fullDrive();
+		
+		
 	}
 	
 	//determine if joystick is being moved
@@ -185,10 +194,10 @@ public class Robot extends IterativeRobot {
 		double y = xbox.getY(hand);
 		
 		//is the value of x within .001 of zero
-		boolean isXZero = Math.abs(x) <= .0001;
+		boolean isXZero = Math.abs(x) <= .01;
 		
 		//is the value of y within .001 of zero
-		boolean isYZero = Math.abs(y) <= .0001;
+		boolean isYZero = Math.abs(y) <= .01;
 		
 		//if x and y are zero, joystick is not moving, return false
 		if(isXZero && isYZero) {
@@ -209,12 +218,12 @@ public class Robot extends IterativeRobot {
 		double y = xbox.getRawAxis(5);
 		
 		//invert
-		driveTrain.arcadeDrive(x * -1, y * -1);
+		driveTrain.arcadeDrive(x * -1, y * -1, true);
 	}
 	
 	//for driving
 	//this function is called when the left joystick on the xbox cotroller is being used
-	//gives fine control, going from -.1 to .1
+	//gives fine control, going from -.5 to .5
 	public void fineDrive() {
 		
 		//get x and y
@@ -223,10 +232,10 @@ public class Robot extends IterativeRobot {
 		
 		//scale the speed
 		//eventually this will get scaling information from driver station or controller, for now just scale to 1/10
-		double scaleFactor = .1;
+		double scaleFactor = .5;
 		
 		//invert and scale
-		driveTrain.arcadeDrive(x * scaleFactor * -1, y * scaleFactor * -1);
+		driveTrain.arcadeDrive(x * scaleFactor * -1, y * scaleFactor * -1, false);
 	}
 	/**
 	 * This function is called periodically during test mode
