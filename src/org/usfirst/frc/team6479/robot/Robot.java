@@ -38,11 +38,25 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * directory.
  */
 public class Robot extends IterativeRobot {
-	//h
-	final String defaultAuto = "Default";
-	final String customAuto = "My Auto";
+	
+	//chooser for auto
+	SendableChooser<String> autoChooser = new SendableChooser<>();
+	//auto options
+	final String autoDefault = "default";
+	final String autoOne = "one";
+	final String autoTwo = "two";
+	//which auto is selected
 	String autoSelected;
-	SendableChooser<String> chooser = new SendableChooser<>();
+	
+	//chooser for tele
+	SendableChooser<String> teleChooser = new SendableChooser<>();
+	//tele options
+	final String teleDefault = "default";
+	final String teleArcade = "arcade";
+	final String teleRacing = "racing";
+	//which tele is selected
+	String teleSelected;
+	
 	//thread for camera
 	Thread visionThread;
 	//the joysticks
@@ -62,8 +76,8 @@ public class Robot extends IterativeRobot {
 	public enum JoystickOn {
 		LEFT, RIGHT
 	}
-	//which stick is on, starts out right
-	JoystickOn stickOn = JoystickOn.RIGHT;
+	//which stick is on
+	JoystickOn stickOn;
 
 	/**
 	 * This function is run when the robot is first started up and should be
@@ -73,9 +87,16 @@ public class Robot extends IterativeRobot {
 	public void robotInit() {
 		GripPipeline pipe = new GripPipeline();
 		
-		chooser.addDefault("Default Auto", defaultAuto);
-		chooser.addObject("My Auto", customAuto);
-		SmartDashboard.putData("Auto choices", chooser);
+		autoChooser.addDefault("Default Auto", autoDefault);
+		autoChooser.addObject("First Auto", autoOne);
+		autoChooser.addObject("Second Auto", autoTwo);
+		SmartDashboard.putData("Auto Choices", autoChooser);
+		
+		teleChooser.addDefault("Default Tele", teleDefault);
+		teleChooser.addObject("Arcade Drive", teleArcade);
+		teleChooser.addObject("Racing Drive", teleRacing);
+		SmartDashboard.putData("Tele Choices", teleChooser);
+		
 		
 		//left drive is inverted since both motors are built identical
 		leftDrive.setInverted(true);
@@ -141,12 +162,9 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousInit() {
-		autoSelected = chooser.getSelected();
-		// autoSelected = SmartDashboard.getString("Auto Selector",
-		// defaultAuto);
-		System.out.println("Auto selected: " + autoSelected);
-		
-
+		//autoSelected = autoChooser.getSelected();
+		//get the selected autonomous
+		autoSelected = SmartDashboard.getString("Auto Choices", autoDefault);
 	}
 
 	/**
@@ -155,10 +173,13 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void autonomousPeriodic() {
 		switch (autoSelected) {
-		case customAuto:
+		case autoOne:
 			// Put custom auto code here
 			break;
-		case defaultAuto:
+		case autoTwo:
+			// Put custom auto code here
+			break;
+		case autoDefault:
 		default:
 			// Put default auto code here
 			break;
@@ -170,7 +191,12 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void teleopInit() {
-		stickOn = JoystickOn.RIGHT;
+		//get the teleop driving config
+		teleSelected = SmartDashboard.getString("Tele Choices", teleDefault);
+		//if its for arcade, set right stick on
+		if(teleSelected.equals(teleArcade)) {
+			stickOn = JoystickOn.RIGHT;
+		}
 	}
 	
 	/**
@@ -179,6 +205,26 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void teleopPeriodic() {
 		
+		//choose which teleop is selected
+		switch (teleSelected) {
+		case teleArcade:
+			//call the arcade function
+			arcade();
+			break;
+		case teleRacing:
+			//this is where ther racing code will go
+			break;
+		case teleDefault:
+		default:
+			//This will be tank drive
+			break;
+		}
+		
+	}
+	
+	
+	//arcade drive
+	public void arcade() {
 		//if the right stick is on and the leftstick is clicked
 		//switch which stick is on to left stick
 		if(stickOn == JoystickOn.RIGHT && xbox.getStickButton(Hand.kLeft))
@@ -202,9 +248,7 @@ public class Robot extends IterativeRobot {
 		{
 			fineDrive();
 		}
-		
 	}
-	
 	//determine if joystick is being moved
 	//param is which joystick on controller
 	public boolean isJoystickMoving(Hand hand) {
