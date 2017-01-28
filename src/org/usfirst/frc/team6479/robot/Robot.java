@@ -85,17 +85,18 @@ public class Robot extends IterativeRobot {
 			// Get the UsbCamera from CameraServer
 			UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
 			// Set the resolution
-			camera.setResolution(640, 480);
+			int xRes = 320;
+			int yRes = 240;
+			camera.setResolution(xRes, yRes);
 
 			// Get a CvSink. This will capture Mats from the camera
 			CvSink cvSink = CameraServer.getInstance().getVideo();
 			// Setup a CvSource. This will send images back to the Dashboard
-			CvSource outputStream = CameraServer.getInstance().putVideo("Rectangle", 640, 480);
+			CvSource outputStream = CameraServer.getInstance().putVideo("Cross Hairs", xRes, yRes);
 
 			// Mats are very memory expensive. Lets reuse this Mat.
 			Mat mat = new Mat();
-			pipe.process(mat);
-			mat = pipe.maskOutput();
+			
 			// This cannot be 'true'. The program will never exit if it is. This
 			// lets the robot stop this thread when restarting robot code or
 			// deploying.
@@ -108,9 +109,17 @@ public class Robot extends IterativeRobot {
 					// skip the rest of the current iteration
 					continue;
 				}
-				// Put a rectangle on the image
-				Imgproc.rectangle(mat, new Point(20, 20), new Point(620, 460),
-						new Scalar(255, 255, 255), 5);
+				
+				pipe.process(mat);
+				mat = pipe.maskOutput();
+				
+				// Put cross hairs on the image
+				int crossWidth = xRes / 20;
+				System.out.println("xRex" + xRes);
+				System.out.println("width of line" + crossWidth);
+				int crossHeight = yRes / 20;
+				Imgproc.line(mat, new Point((xRes / 2) - (crossWidth / 2), (yRes / 2)), new Point((xRes / 2) + (crossWidth / 2), (yRes / 2)), new Scalar(0, 255, 0), 5);
+				Imgproc.line(mat, new Point((xRes / 2), (yRes / 2) + (crossHeight / 2)), new Point((xRes / 2), (yRes / 2) - (crossHeight / 2)), new Scalar(0, 255, 0), 5);
 				// Give the output stream a new image to display
 				outputStream.putFrame(mat);
 			}
