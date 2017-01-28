@@ -195,7 +195,7 @@ public class Robot extends IterativeRobot {
 		}
 		
 	}
-	
+	//joystick moving
 	//determine if joystick is being moved
 	//param is which joystick on controller
 	public boolean isJoystickMoving(Hand hand) {
