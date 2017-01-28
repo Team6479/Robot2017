@@ -38,6 +38,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * directory.
  */
 public class Robot extends IterativeRobot {
+	//test
 	final String defaultAuto = "Default";
 	final String customAuto = "My Auto";
 	String autoSelected;
