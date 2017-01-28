@@ -1,5 +1,5 @@
 # Robot2017
-Our code for our robot for the 2017 season
+Our code for our robot for the 2017 season.
 <br /><br />
 When adding to code, comment everything. Beacuse there are many programs coding on this, it is easier on everyone if you comment
 <br /><br />
