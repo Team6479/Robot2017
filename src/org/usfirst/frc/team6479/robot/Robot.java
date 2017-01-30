@@ -49,6 +49,8 @@ public class Robot extends IterativeRobot {
 	//Joystick rightStick = new Joystick(1);
 	//Joystick leftStick = new Joystick(0);
 	
+	
+	
 	//xbox cotroller
 	XboxController xbox = new XboxController(0);
 	
@@ -73,6 +75,7 @@ public class Robot extends IterativeRobot {
 	public void robotInit() {
 		GripPipeline pipe = new GripPipeline();
 		
+		SmartDashboard.putString("blah", "value");
 		chooser.addDefault("Default Auto", defaultAuto);
 		chooser.addObject("My Auto", customAuto);
 		SmartDashboard.putData("Auto choices", chooser);
@@ -171,6 +174,7 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void teleopInit() {
 		stickOn = JoystickOn.RIGHT;
+		
 	}
 	
 	/**
