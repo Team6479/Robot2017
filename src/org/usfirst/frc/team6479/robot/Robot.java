@@ -164,7 +164,7 @@ public class Robot extends IterativeRobot {
 	public void autonomousInit() {
 		//autoSelected = autoChooser.getSelected();
 		//get the selected autonomous
-		autoSelected = SmartDashboard.getString("Auto Choices", autoDefault);
+		autoSelected = autoChooser.getSelected();
 	}
 
 	/**
@@ -192,7 +192,8 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void teleopInit() {
 		//get the teleop driving config
-		teleSelected = SmartDashboard.getString("Tele Choices", teleDefault);
+		teleSelected = teleChooser.getSelected();
+		SmartDashboard.putString("Selected", teleSelected);
 		//if its for arcade, set right stick on
 		if(teleSelected.equals(teleArcade)) {
 			stickOn = JoystickOn.RIGHT;
