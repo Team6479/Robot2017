@@ -212,7 +212,8 @@ public class Robot extends IterativeRobot {
 			arcade();
 			break;
 		case teleRacing:
-			//this is where ther racing code will go
+			//call function for racing drive
+			racing();
 			break;
 		case teleDefault:
 		default:
@@ -222,7 +223,9 @@ public class Robot extends IterativeRobot {
 		
 	}
 	
-	
+	public void racing(){
+		driveTrain.arcadeDrive(rotate(), throttle());
+	}
 	//arcade drive
 	public void arcade() {
 		//if the right stick is on and the leftstick is clicked
@@ -251,6 +254,19 @@ public class Robot extends IterativeRobot {
 	}
 	//determine if joystick is being moved
 	//param is which joystick on controller
+	public double throttle(){
+		double left = xbox.getRawAxis(2);
+		double right = xbox.getRawAxis(3);
+		//each trigger has an axis range of 0 to 1
+		//to make left trigger reverse, subtract axis value from right trigger
+		return right - left;
+	}
+	//this method is called when the left joystick moves horizontally
+	public double rotate(){
+		double x = xbox.getRawAxis(0);
+		//invert
+		return (x * -1);
+	}
 	public boolean isJoystickMoving(Hand hand) {
 		//get x and y
 		double x = xbox.getX(hand);
