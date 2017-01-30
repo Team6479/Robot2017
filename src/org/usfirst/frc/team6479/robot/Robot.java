@@ -54,6 +54,8 @@ public class Robot extends IterativeRobot {
 	final String teleDefault = "default";
 	final String teleArcade = "arcade";
 	final String teleRacing = "racing";
+	final String teleTank = "tank";
+	
 	//which tele is selected
 	String teleSelected;
 	
@@ -215,6 +217,12 @@ public class Robot extends IterativeRobot {
 		case teleRacing:
 			//call function for racing drive
 			racing();
+			break;
+		case teleTank:
+			//calculates left side, sets left drive speed to y axis of xbox left
+			leftDrive.set(xbox.getY(Hand.kLeft) );
+			//calculates right side, sets right drive speed to y axis of xbox right
+				rightDrive.set(xbox.getY(Hand.kRight) );
 			break;
 		case teleDefault:
 		default:
