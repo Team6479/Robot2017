@@ -97,6 +97,7 @@ public class Robot extends IterativeRobot {
 		teleChooser.addDefault("Default Tele", teleDefault);
 		teleChooser.addObject("Arcade Drive", teleArcade);
 		teleChooser.addObject("Racing Drive", teleRacing);
+		teleChooser.addObject("Tank Drive", teleTank);
 		SmartDashboard.putData("Tele Choices", teleChooser);
 		
 		
