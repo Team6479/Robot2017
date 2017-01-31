@@ -1,44 +1,43 @@
 <xml version="1.0">
 <dashboard>
-	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
-		<location x="225" y="16"/>
-		<width>47</width>
-		<property name="Text" value="Teleop"/>
-	</static-widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.CameraServerViewer">
-		<location x="433" y="196"/>
-		<width>252</width>
-		<height>196</height>
+		<location x="282" y="329"/>
+		<width>423</width>
+		<height>322</height>
 		<property name="Camera Choice" value="Cross Hairs"/>
 	</static-widget>
-	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
-		<location x="332" y="3"/>
-		<width>96</width>
-		<height>36</height>
-		<property name="Text" value="Autonomous"/>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.CameraServerViewer">
+		<location x="275" y="5"/>
+		<width>428</width>
+		<height>314</height>
+		<property name="Camera Choice" value=""/>
 	</static-widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
-		<location x="4" y="4"/>
+		<location x="5" y="4"/>
 		<property name="Text" value="Robot Connection"/>
 	</static-widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.ConnectionIndicator">
+		<location x="4" y="23"/>
+		<width>107</width>
+	</static-widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="183" y="74"/>
+		<property name="Text" value="Auto Choices"/>
+	</static-widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="184" y="7"/>
+		<property name="Text" value="Tele Choices"/>
+	</static-widget>
 	<widget field="Auto Choices" type="String Chooser" class="edu.wpi.first.smartdashboard.gui.elements.Chooser">
-		<location x="298" y="38"/>
+		<location x="170" y="85"/>
 		<property name="Use Radio Buttons" value="false"/>
 	</widget>
-	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.CameraServerViewer">
-		<location x="421" y="4"/>
-		<width>275</width>
-		<height>190</height>
-		<property name="Camera Choice" value="USB Camera 0"/>
-	</static-widget>
-	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.ConnectionIndicator">
-		<location x="6" y="25"/>
-		<width>38</width>
-		<height>18</height>
-	</static-widget>
 	<widget field="Tele Choices" type="String Chooser" class="edu.wpi.first.smartdashboard.gui.elements.Chooser">
-		<location x="167" y="39"/>
+		<location x="172" y="15"/>
 		<property name="Use Radio Buttons" value="false"/>
+	</widget>
+	<widget field="Selected" type="String" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="4" y="61"/>
 	</widget>
 </dashboard>
 <live-window>
