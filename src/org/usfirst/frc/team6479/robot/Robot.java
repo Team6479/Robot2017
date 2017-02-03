@@ -10,6 +10,7 @@ import edu.wpi.cscore.CvSource;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
@@ -80,6 +81,9 @@ public class Robot extends IterativeRobot {
 	}
 	//which stick is on
 	JoystickOn stickOn;
+	
+	Encoder leftDriveEncoder;
+	Encoder rightDriveEncoder;
 
 	/**
 	 * This function is run when the robot is first started up and should be
@@ -168,6 +172,13 @@ public class Robot extends IterativeRobot {
 		//autoSelected = autoChooser.getSelected();
 		//get the selected autonomous
 		autoSelected = autoChooser.getSelected();
+		
+		//init the encoders
+		leftDriveEncoder = new Encoder(0, 1, false, Encoder.EncodingType.k4X);
+		rightDriveEncoder = new Encoder(3, 4, false, Encoder.EncodingType.k4X);
+		//set the time until when the robot is considered stopped, set in seconds
+		leftDriveEncoder.setMaxPeriod(.05);
+		rightDriveEncoder.setMaxPeriod(.05);
 	}
 
 	/**
@@ -185,6 +196,8 @@ public class Robot extends IterativeRobot {
 		case autoDefault:
 		default:
 			// Put default auto code here
+			
+			//basic autonomous, drive forward, then turn left
 			break;
 		}
 	}
@@ -201,6 +214,12 @@ public class Robot extends IterativeRobot {
 		if(teleSelected.equals(teleArcade)) {
 			stickOn = JoystickOn.RIGHT;
 		}
+		//init the encoders
+		leftDriveEncoder = new Encoder(0, 1, false, Encoder.EncodingType.k4X);
+		rightDriveEncoder = new Encoder(3, 4, true, Encoder.EncodingType.k4X);
+		//set the time until when the robot is considered stopped, set in seconds
+		leftDriveEncoder.setMaxPeriod(.05);
+		rightDriveEncoder.setMaxPeriod(.05);
 	}
 	
 	/**
@@ -208,6 +227,11 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void teleopPeriodic() {
+		
+		SmartDashboard.putNumber("Left Distance", leftDriveEncoder.getDistance());
+		SmartDashboard.putNumber("Right Distance", rightDriveEncoder.getDistance());
+		SmartDashboard.putBoolean("Left Direction", leftDriveEncoder.getDirection());
+		SmartDashboard.putBoolean("Right Direction", rightDriveEncoder.getDirection());
 		
 		//choose which teleop is selected
 		switch (teleSelected) {

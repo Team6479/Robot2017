@@ -1,0 +1,39 @@
+<xml version="1.0">
+<dashboard>
+	<widget field="Right Direction" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="84"/>
+	</widget>
+	<widget field="Left Direction" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="63"/>
+	</widget>
+	<widget field="Right Distance" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="42"/>
+	</widget>
+	<widget field="Left Distance" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="21"/>
+	</widget>
+	<widget field="Selected" type="String" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="0"/>
+	</widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.CameraServerViewer">
+		<location x="193" y="341"/>
+		<width>442</width>
+		<height>320</height>
+		<property name="Camera Choice" value="Cross Hairs"/>
+	</static-widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.CameraServerViewer">
+		<location x="257" y="10"/>
+		<width>374</width>
+		<height>283</height>
+		<property name="Camera Choice" value=""/>
+	</static-widget>
+	<widget field="Auto Choices" type="String Chooser" class="edu.wpi.first.smartdashboard.gui.elements.Chooser">
+		<location x="157" y="253"/>
+	</widget>
+	<widget field="Tele Choices" type="String Chooser" class="edu.wpi.first.smartdashboard.gui.elements.Chooser">
+		<location x="19" y="243"/>
+	</widget>
+</dashboard>
+<live-window>
+</live-window>
+</xml>
