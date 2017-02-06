@@ -8,6 +8,8 @@ import org.opencv.imgproc.Imgproc;
 import edu.wpi.cscore.CvSink;
 import edu.wpi.cscore.CvSource;
 import edu.wpi.cscore.UsbCamera;
+import edu.wpi.first.wpilibj.ADXRS450_Gyro;
+import edu.wpi.first.wpilibj.AnalogGyro;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Encoder;
@@ -18,7 +20,10 @@ import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.Spark;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.interfaces.Gyro;
+import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -73,7 +78,9 @@ public class Robot extends IterativeRobot {
 	Spark leftDrive = new Spark(0);
 	Spark rightDrive = new Spark(1);
 	
-	RobotDrive driveTrain = new RobotDrive(leftDrive, rightDrive);
+	
+	
+	CustomDrive driveTrain = new CustomDrive(leftDrive, rightDrive);
 	
 	//enums for left and right joystick on
 	public enum JoystickOn {
@@ -85,6 +92,11 @@ public class Robot extends IterativeRobot {
 	Encoder leftDriveEncoder;
 	Encoder rightDriveEncoder;
 
+	
+	//RobotDrive and Gyro for autonomous
+//	RobotDrive myDrive;
+	ADXRS450_Gyro gyro;
+	double Kp = 0.03;
 	/**
 	 * This function is run when the robot is first started up and should be
 	 * used for any initialization code.
@@ -92,6 +104,10 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void robotInit() {
 		GripPipeline pipe = new GripPipeline();
+		
+		gyro = new ADXRS450_Gyro();
+	//	gyro.startThread();
+		//gyro.startThread();
 		
 		autoChooser.addDefault("Default Auto", autoDefault);
 		autoChooser.addObject("First Auto", autoOne);
@@ -143,8 +159,8 @@ public class Robot extends IterativeRobot {
 				
 				// Put cross hairs on the image
 				int crossWidth = xRes / 20;
-				System.out.println("xRex" + xRes);
-				System.out.println("width of line" + crossWidth);
+	//			System.out.println("xRex" + xRes);
+	//			System.out.println("width of line" + crossWidth);
 				int crossHeight = yRes / 20;
 				Imgproc.line(mat, new Point((xRes / 2) - (crossWidth / 2), (yRes / 2)), new Point((xRes / 2) + (crossWidth / 2), (yRes / 2)), new Scalar(0, 255, 0), 5);
 				Imgproc.line(mat, new Point((xRes / 2), (yRes / 2) + (crossHeight / 2)), new Point((xRes / 2), (yRes / 2) - (crossHeight / 2)), new Scalar(0, 255, 0), 5);
@@ -179,6 +195,10 @@ public class Robot extends IterativeRobot {
 		//set the time until when the robot is considered stopped, set in seconds
 		leftDriveEncoder.setMaxPeriod(.05);
 		rightDriveEncoder.setMaxPeriod(.05);
+		
+		//initialize RobotDrove and Gyro
+	//	myDrive = new RobotDrive(1,2);
+		
 	}
 
 	/**
@@ -186,9 +206,46 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousPeriodic() {
-		switch (autoSelected) {
+	//	SmartDashboard.putNumber("Left Distance", leftDriveEncoder.getDistance());
+	//	SmartDashboard.putNumber("Right Distance", rightDriveEncoder.getDistance());
+		
+	/*	while(isAutonomous()){
+		driveTrain.tankDrive(-.8, .8);
+		Timer.delay(3);
+		}
+	*/
+		
+		
+		//gyro.calibrate();
+		gyro.reset();
+		//while(isAutonomous() && (leftDriveEncoder.getDistance()<2000) && (rightDriveEncoder.getDistance()<2000)){
+		while(isAutonomous()&& (leftDriveEncoder.getDistance()<1000) && (rightDriveEncoder.getDistance()<1000)){
+			double angle = gyro.getAngle();
+			driveTrain.drive(0.25, -angle*Kp);
+
+			//System.out.println("Angle: " + angle);
+			//System.out.println("Turn: " + -1*angle*Kp);
+			Timer.delay(0.004);
+		}
+		
+		driveTrain.drive(0, 0);
+		
+		
+		gyro.reset();
+		System.out.println("Angel before:"+gyro.getAngle());
+		while(isAutonomous() &&Math.abs(gyro.getAngle()) <= 360){
+			rightDrive.setSpeed(-0.30);
+			leftDrive.setSpeed(-0.30);
+		}
+		leftDrive.setSpeed(0);
+		rightDrive.setSpeed(0);
+		Timer.delay(5);
+		System.out.println("after"+ gyro.getAngle());
+		/*switch (autoSelected) {
 		case autoOne:
-			// Put custom auto code here
+			driveTrain.tankDrive(-.8, .8);
+			
+		
 			break;
 		case autoTwo:
 			// Put custom auto code here
@@ -198,8 +255,18 @@ public class Robot extends IterativeRobot {
 			// Put default auto code here
 			
 			//basic autonomous, drive forward, then turn left
+			if(Math.abs(leftDriveEncoder.getDistance()) < 600 && Math.abs(rightDriveEncoder.getDistance()) < 600)
+			{
+				leftDrive.set(-.5);
+				rightDrive.set(.5);
+			}
+			else {
+				leftDrive.set(0);
+				rightDrive.set(0);
+			}
 			break;
 		}
+		*/
 	}
 
 	/**
@@ -220,6 +287,8 @@ public class Robot extends IterativeRobot {
 		//set the time until when the robot is considered stopped, set in seconds
 		leftDriveEncoder.setMaxPeriod(.05);
 		rightDriveEncoder.setMaxPeriod(.05);
+	
+		gyro.reset();
 	}
 	
 	/**
@@ -230,8 +299,22 @@ public class Robot extends IterativeRobot {
 		
 		SmartDashboard.putNumber("Left Distance", leftDriveEncoder.getDistance());
 		SmartDashboard.putNumber("Right Distance", rightDriveEncoder.getDistance());
-		SmartDashboard.putBoolean("Left Direction", leftDriveEncoder.getDirection());
-		SmartDashboard.putBoolean("Right Direction", rightDriveEncoder.getDirection());
+		
+		if(xbox.getAButton()){
+	
+			gyro.reset();
+			System.out.println("Angel before:"+gyro.getAngle());
+			while(Math.abs(gyro.getAngle()) <= 360){
+				rightDrive.setSpeed(-0.30);
+				leftDrive.setSpeed(-0.30);
+	
+				//Timer.delay(0.004);
+			}
+			leftDrive.setSpeed(0);
+			rightDrive.setSpeed(0);
+			System.out.println("After:"+gyro.getAngle());
+			
+		}
 		
 		//choose which teleop is selected
 		switch (teleSelected) {
