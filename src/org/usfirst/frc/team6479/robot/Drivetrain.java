@@ -33,4 +33,31 @@ public class Drivetrain
 	{
 		drive.arcadeDrive(move, rotation, squared);
 	}
+	public void driveCurve(double outputMagnitude, double curve) {
+	    final double leftOutput;
+	    final double rightOutput;
+	    double sensitivity = .5;
+	    
+	    if (curve < 0) {
+	      double value = Math.log(-curve);
+	      double ratio = (value - sensitivity) / (value + sensitivity);
+	      if (ratio == 0) {
+	        ratio = .0000000001;
+	      }
+	      leftOutput = outputMagnitude / ratio;
+	      rightOutput = outputMagnitude;
+	    } else if (curve > 0) {
+	      double value = Math.log(curve);
+	      double ratio = (value - sensitivity) / (value + sensitivity);
+	      if (ratio == 0) {
+	        ratio = .0000000001;
+	      }
+	      leftOutput = outputMagnitude;
+	      rightOutput = outputMagnitude / ratio;
+	    } else {
+	      leftOutput = outputMagnitude;
+	      rightOutput = outputMagnitude;
+	    }
+	    drive(-1 * leftOutput, rightOutput);
+	  }
 }

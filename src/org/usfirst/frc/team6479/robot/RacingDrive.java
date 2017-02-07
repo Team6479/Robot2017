@@ -19,18 +19,20 @@ public class RacingDrive extends Teleop
 	{
 		drivetrain.arcade(rotate(), throttle(), true);
 	}
-	//how much speed
-	public double throttle(){
+	// how much speed
+	public double throttle()
+	{
 		double left = xbox.getRawAxis(2);
 		double right = xbox.getRawAxis(3);
-		//each trigger has an axis range of 0 to 1
-		//to make left trigger reverse, subtract axis value from right trigger
+		// each trigger has an axis range of 0 to 1
+		// to make left trigger reverse, subtract axis value from right trigger
 		return right - left;
 	}
-	//this method is called when the left joystick moves horizontally
-	public double rotate(){
+	// this method is called when the left joystick moves horizontally
+	public double rotate()
+	{
 		double x = xbox.getRawAxis(0);
-		//invert
-		return (x * -1);
+		// invert
+		return(x * -1);
 	}
 }

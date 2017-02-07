@@ -8,6 +8,7 @@ import org.opencv.imgproc.Imgproc;
 import edu.wpi.cscore.CvSink;
 import edu.wpi.cscore.CvSource;
 import edu.wpi.cscore.UsbCamera;
+import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Encoder;
@@ -18,6 +19,7 @@ import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.Spark;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -44,6 +46,7 @@ public class Robot extends IterativeRobot
 
 	// the drivetrain
 	Drivetrain drivetrain;
+	XboxController xbox = new XboxController(0);
 
 	// chooser for auto
 	SendableChooser<String> autoChooser = new SendableChooser<>();
@@ -71,6 +74,10 @@ public class Robot extends IterativeRobot
 	Encoder leftDriveEncoder;
 	Encoder rightDriveEncoder;
 
+	// gyro for autonoumous
+	ADXRS450_Gyro gyro;
+	double Kp = 0.03;
+
 	/**
 	 * This function is run when the robot is first started up and should be
 	 * used for any initialization code.
@@ -92,6 +99,10 @@ public class Robot extends IterativeRobot
 		teleChooser.addDefault("Tank Drive", teleTank);
 		SmartDashboard.putData("Tele Choices", teleChooser);
 
+		// init gyro
+		gyro = new ADXRS450_Gyro();
+
+		// init camera data reader
 		GripPipeline pipe = new GripPipeline();
 
 		// setup camera
@@ -178,10 +189,47 @@ public class Robot extends IterativeRobot
 	@Override
 	public void autonomousPeriodic()
 	{
-		switch(autoSelected)
+		// SmartDashboard.putNumber("Left Distance",
+		// leftDriveEncoder.getDistance());
+		// SmartDashboard.putNumber("Right Distance",
+		// rightDriveEncoder.getDistance());
+
+		/*	while(isAutonomous()){
+		driveTrain.tankDrive(-.8, .8);
+		Timer.delay(3);
+		}
+	*/
+
+		// gyro.calibrate();
+		gyro.reset();
+		// while(isAutonomous() && (leftDriveEncoder.getDistance()<2000) &&
+		// (rightDriveEncoder.getDistance()<2000)){
+		while(isAutonomous() && (leftDriveEncoder.getDistance() < 1000) && (rightDriveEncoder.getDistance() < 1000))
 		{
+			double angle = gyro.getAngle();
+			drivetrain.driveCurve(0.25, -angle * Kp);
+
+			// System.out.println("Angle: " + angle);
+			// System.out.println("Turn: " + -1*angle*Kp);
+			Timer.delay(0.004);
+		}
+
+		drivetrain.driveCurve(0, 0);
+
+		gyro.reset();
+		System.out.println("Angel before:" + gyro.getAngle());
+		while(isAutonomous() && Math.abs(gyro.getAngle()) <= 360)
+		{
+			drivetrain.drive(-.3, -.3);
+		}
+		drivetrain.drive(0, 0);
+		Timer.delay(5);
+		System.out.println("after" + gyro.getAngle());
+		/*switch (autoSelected) {
 		case autoOne:
-			// Put custom auto code here
+			driveTrain.tankDrive(-.8, .8);
+			
+		
 			break;
 		case autoTwo:
 			// Put custom auto code here
@@ -189,10 +237,20 @@ public class Robot extends IterativeRobot
 		case autoDefault:
 		default:
 			// Put default auto code here
-
-			// basic autonomous, drive forward, then turn left
+			
+			//basic autonomous, drive forward, then turn left
+			if(Math.abs(leftDriveEncoder.getDistance()) < 600 && Math.abs(rightDriveEncoder.getDistance()) < 600)
+			{
+				leftDrive.set(-.5);
+				rightDrive.set(.5);
+			}
+			else {
+				leftDrive.set(0);
+				rightDrive.set(0);
+			}
 			break;
 		}
+		*/
 	}
 
 	/**
@@ -240,7 +298,22 @@ public class Robot extends IterativeRobot
 		SmartDashboard.putNumber("Right Distance", rightDriveEncoder.getDistance());
 		SmartDashboard.putBoolean("Left Direction", leftDriveEncoder.getDirection());
 		SmartDashboard.putBoolean("Right Direction", rightDriveEncoder.getDirection());
+		
+		if(xbox.getAButton())
+		{
+			gyro.reset();
+			System.out.println("Angel before:" + gyro.getAngle());
+			while(Math.abs(gyro.getAngle()) <= 360)
+			{		
+				drivetrain.drive(-.3, -.3);
 
+				// Timer.delay(0.004);
+			}
+			drivetrain.drive(0, 0);
+			System.out.println("After:" + gyro.getAngle());
+
+		}
+		
 		teleopDrive.drive();
 
 	}
