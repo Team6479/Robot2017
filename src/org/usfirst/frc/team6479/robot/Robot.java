@@ -230,7 +230,7 @@ public class Robot extends IterativeRobot {
 		
 		
 		gyro.reset();
-		System.out.println("Angel before:"+gyro.getAngle());
+		SmartDashboard.putNumber("Angle before", gyro.getAngle());
 		while(isAutonomous() &&Math.abs(gyro.getAngle()) <= 360){
 			rightDrive.setSpeed(-0.30);
 			leftDrive.setSpeed(-0.30);
@@ -238,7 +238,7 @@ public class Robot extends IterativeRobot {
 		leftDrive.setSpeed(0);
 		rightDrive.setSpeed(0);
 		Timer.delay(5);
-		System.out.println("after"+ gyro.getAngle());
+		SmartDashboard.putNumber("Angle after", gyro.getAngle());
 		/*switch (autoSelected) {
 		case autoOne:
 			driveTrain.tankDrive(-.8, .8);
@@ -297,12 +297,13 @@ public class Robot extends IterativeRobot {
 		
 		SmartDashboard.putNumber("Left Distance", leftDriveEncoder.getDistance());
 		SmartDashboard.putNumber("Right Distance", rightDriveEncoder.getDistance());
+		double angleToMove = SmartDashboard.getNumber("Angel to move", 90);
 		
 		if(xbox.getAButton()){
 	
 			gyro.reset();
-			System.out.println("Angel before:"+gyro.getAngle());
-			while(Math.abs(gyro.getAngle()) <= 90){
+			SmartDashboard.putNumber("Angle before", gyro.getAngle());
+			while(Math.abs(gyro.getAngle()) <= angleToMove){
 				rightDrive.setSpeed(-0.30);
 				leftDrive.setSpeed(-0.30);
 	
@@ -310,7 +311,7 @@ public class Robot extends IterativeRobot {
 			}
 			leftDrive.setSpeed(0);
 			rightDrive.setSpeed(0);
-			System.out.println("After:"+gyro.getAngle());
+			SmartDashboard.putNumber("Angle after", gyro.getAngle());
 			
 		}
 		
