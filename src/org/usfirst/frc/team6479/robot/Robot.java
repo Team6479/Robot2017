@@ -314,6 +314,9 @@ public class Robot extends IterativeRobot {
 			}
 			leftDrive.setSpeed(0);
 			rightDrive.setSpeed(0);
+			
+			Timer.delay(5);
+			
 			SmartDashboard.putNumber("Angle after", gyro.getAngle());
 			
 		}
