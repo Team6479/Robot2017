@@ -289,10 +289,10 @@ public class Robot extends IterativeRobot {
 		leftDriveEncoder.setMaxPeriod(.05);
 		rightDriveEncoder.setMaxPeriod(.05);
 	
-		double angleToMove = SmartDashboard.getNumber("Angel to move", 90);
+		angleToMove = SmartDashboard.getNumber("Angel to move", 90);
 		gyro.reset();
 	}
-	
+	double angleToMove;
 	/**
 	 * This function is called periodically during operator control
 	 */
