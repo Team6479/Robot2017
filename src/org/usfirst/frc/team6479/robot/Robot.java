@@ -119,6 +119,9 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putData("Tele Choices", teleChooser);
 		
 		
+		SmartDashboard.putNumber("Angel to move", 90);
+		
+		
 		//left drive is inverted since both motors are built identical
 		leftDrive.setInverted(true);
 		
