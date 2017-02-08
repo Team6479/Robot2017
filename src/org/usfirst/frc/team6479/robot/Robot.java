@@ -289,6 +289,7 @@ public class Robot extends IterativeRobot {
 		leftDriveEncoder.setMaxPeriod(.05);
 		rightDriveEncoder.setMaxPeriod(.05);
 	
+		double angleToMove = SmartDashboard.getNumber("Angel to move", 90);
 		gyro.reset();
 	}
 	
@@ -300,7 +301,6 @@ public class Robot extends IterativeRobot {
 		
 		SmartDashboard.putNumber("Left Distance", leftDriveEncoder.getDistance());
 		SmartDashboard.putNumber("Right Distance", rightDriveEncoder.getDistance());
-		double angleToMove = SmartDashboard.getNumber("Angel to move", 90);
 		
 		if(xbox.getAButton()){
 	
