@@ -125,23 +125,22 @@ public class Robot extends IterativeRobot {
 		//left drive is inverted since both motors are built identical
 		leftDrive.setInverted(true);
 		
-		//setup camera
 		visionThread = new Thread(() -> {
 			// Get the UsbCamera from CameraServer
 			UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
 			// Set the resolution
 			int xRes = 320;
-			int yRes = 240;
+			int yRes = 180;
 			camera.setResolution(xRes, yRes);
 
 			// Get a CvSink. This will capture Mats from the camera
 			CvSink cvSink = CameraServer.getInstance().getVideo();
 			// Setup a CvSource. This will send images back to the Dashboard
-			CvSource outputStream = CameraServer.getInstance().putVideo("Cross Hairs", xRes, yRes);
+			CvSource outputStream = CameraServer.getInstance().putVideo("Cross Hairs", 640, 480);
 
 			// Mats are very memory expensive. Lets reuse this Mat.
 			Mat mat = new Mat();
-			
+
 			// This cannot be 'true'. The program will never exit if it is. This
 			// lets the robot stop this thread when restarting robot code or
 			// deploying.
@@ -154,15 +153,15 @@ public class Robot extends IterativeRobot {
 					// skip the rest of the current iteration
 					continue;
 				}
-				
 				pipe.process(mat);
-				mat = pipe.maskOutput();
+			mat = pipe.maskOutput();
 				
 				// Put cross hairs on the image
 				int crossWidth = xRes / 20;
 	//			System.out.println("xRex" + xRes);
 	//			System.out.println("width of line" + crossWidth);
 				int crossHeight = yRes / 20;
+				
 				Imgproc.line(mat, new Point((xRes / 2) - (crossWidth / 2), (yRes / 2)), new Point((xRes / 2) + (crossWidth / 2), (yRes / 2)), new Scalar(0, 255, 0), 5);
 				Imgproc.line(mat, new Point((xRes / 2), (yRes / 2) + (crossHeight / 2)), new Point((xRes / 2), (yRes / 2) - (crossHeight / 2)), new Scalar(0, 255, 0), 5);
 				// Give the output stream a new image to display
@@ -172,7 +171,7 @@ public class Robot extends IterativeRobot {
 		visionThread.setDaemon(true);
 		visionThread.start();
 	}
-
+	
 	/**
 	 * This autonomous (along with the chooser code above) shows how to select
 	 * between different autonomous modes using the dashboard. The sendable
