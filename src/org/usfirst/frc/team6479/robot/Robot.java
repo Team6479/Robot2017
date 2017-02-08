@@ -102,7 +102,7 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void robotInit() {
-		GripPipeline pipe = new GripPipeline();
+		GripPipelineLight pipe = new GripPipelineLight();
 		
 		gyro = new ADXRS450_Gyro();
 	//	gyro.startThread();
