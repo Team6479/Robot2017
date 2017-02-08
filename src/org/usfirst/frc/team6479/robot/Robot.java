@@ -102,7 +102,7 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void robotInit() {
-		GripPipelineLight pipe = new GripPipelineLight();
+		GripPipeline pipe = new GripPipeline();
 		
 		gyro = new ADXRS450_Gyro();
 	//	gyro.startThread();
@@ -130,13 +130,13 @@ public class Robot extends IterativeRobot {
 			UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
 			// Set the resolution
 			int xRes = 320;
-			int yRes = 180;
+			int yRes = 240;
 			camera.setResolution(xRes, yRes);
 
 			// Get a CvSink. This will capture Mats from the camera
 			CvSink cvSink = CameraServer.getInstance().getVideo();
 			// Setup a CvSource. This will send images back to the Dashboard
-			CvSource outputStream = CameraServer.getInstance().putVideo("Cross Hairs", 640, 480);
+			CvSource outputStream = CameraServer.getInstance().putVideo("Cross Hairs", xRes, yRes);
 
 			// Mats are very memory expensive. Lets reuse this Mat.
 			Mat mat = new Mat();
@@ -154,7 +154,7 @@ public class Robot extends IterativeRobot {
 					continue;
 				}
 				pipe.process(mat);
-			mat = pipe.maskOutput();
+		 	  mat = pipe.maskOutput();
 				
 				// Put cross hairs on the image
 				int crossWidth = xRes / 20;
