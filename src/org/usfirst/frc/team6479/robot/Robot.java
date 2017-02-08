@@ -302,7 +302,7 @@ public class Robot extends IterativeRobot {
 	
 			gyro.reset();
 			System.out.println("Angel before:"+gyro.getAngle());
-			while(Math.abs(gyro.getAngle()) <= 360){
+			while(Math.abs(gyro.getAngle()) <= 90){
 				rightDrive.setSpeed(-0.30);
 				leftDrive.setSpeed(-0.30);
 	
