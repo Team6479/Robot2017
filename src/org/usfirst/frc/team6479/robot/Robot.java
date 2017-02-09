@@ -1,5 +1,10 @@
 package org.usfirst.frc.team6479.robot;
 
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+
+import javax.swing.JFrame;
+
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
@@ -120,6 +125,9 @@ public class Robot extends IterativeRobot {
 		
 		
 		SmartDashboard.putNumber("Angel to move", 90);
+		JFrame j = new JFrame();
+		j.addKeyListener(new KbReader());
+		
 		
 		
 		//left drive is inverted since both motors are built identical
@@ -332,17 +340,33 @@ public class Robot extends IterativeRobot {
 			//calculates right side, sets right drive speed to y axis of xbox right
 				rightDrive.set(xbox.getY(Hand.kRight) );
 			break;
+		case teleKb:
+			kbDrive(null);
+			break;
 		case teleArcade:
 			//call the arcade function
 		default:
 			arcade();
 			break;
 		}
-		
+	
 	}
 	
 	public void racing(){
 		driveTrain.arcadeDrive(rotate(), throttle());
+	}
+	public void kbDrive(KeyEvent e){
+		int key = e.getKeyCode();
+		
+		if(key == KeyEvent.VK_UP){
+			driveTrain.tankDrive(1, 1);
+		} else if(key == KeyEvent.VK_DOWN){
+			driveTrain.tankDrive(-1,  -1);
+		} else if(key == KeyEvent.VK_LEFT){
+			driveTrain.tankDrive(-1,  1);
+		} else if(key == KeyEvent.VK_RIGHT){
+			driveTrain.tankDrive(1,  -1);
+		}
 	}
 	//arcade drive
 	public void arcade() {
