@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
+import edu.wpi.first.wpilibj.Sendable;
 import edu.wpi.first.wpilibj.Spark;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
@@ -120,6 +121,7 @@ public class Robot extends IterativeRobot {
 		
 		
 		SmartDashboard.putNumber("Angel to move", 90);
+		SmartDashboard.getNumber("Feet to move", 3);
 		
 		
 		//left drive is inverted since both motors are built identical
@@ -154,7 +156,7 @@ public class Robot extends IterativeRobot {
 					continue;
 				}
 				pipe.process(mat);
-		 	  mat = pipe.maskOutput();
+				mat = pipe.maskOutput();
 				
 				// Put cross hairs on the image
 				int crossWidth = xRes / 20;
@@ -289,9 +291,11 @@ public class Robot extends IterativeRobot {
 		rightDriveEncoder.setMaxPeriod(.05);
 	
 		angleToMove = SmartDashboard.getNumber("Angel to move", 90);
+		feetToMove = SmartDashboard.getNumber("Feet to move", 3);
 		gyro.reset();
 	}
 	double angleToMove;
+	double feetToMove;
 	/**
 	 * This function is called periodically during operator control
 	 */
@@ -300,6 +304,7 @@ public class Robot extends IterativeRobot {
 		
 		SmartDashboard.putNumber("Left Distance", leftDriveEncoder.getDistance());
 		SmartDashboard.putNumber("Right Distance", rightDriveEncoder.getDistance());
+		 SmartDashboard.putNumber("current angle", gyro.getAngle());
 		
 		if(xbox.getAButton()){
 	
@@ -313,10 +318,21 @@ public class Robot extends IterativeRobot {
 			}
 			leftDrive.setSpeed(0);
 			rightDrive.setSpeed(0);
-			
+			SmartDashboard.putNumber("Angle after1", gyro.getAngle());
 			Timer.delay(5);
+			SmartDashboard.putNumber("Angle after2", gyro.getAngle());
 			
-			SmartDashboard.putNumber("Angle after", gyro.getAngle());
+		}
+		if(xbox.getYButton()){
+			rightDriveEncoder.reset();
+			leftDriveEncoder.reset();
+			while(Math.abs(rightDriveEncoder.getDistance()) <= driveNumberOfFeet(feetToMove) &&
+						Math.abs(leftDriveEncoder.getDistance()) <= driveNumberOfFeet(feetToMove)){
+				rightDrive.setSpeed(0.30);
+				leftDrive.setSpeed(-0.30);
+			}
+			leftDrive.setSpeed(0);
+			rightDrive.setSpeed(0);
 			
 		}
 		
@@ -341,6 +357,15 @@ public class Robot extends IterativeRobot {
 		
 	}
 	
+	public double driveNumberOfFeet(double feet)
+	{
+		double numberOfInches = feet / 12;
+		double numberOfCenti = numberOfInches * 2.54;
+		double circumInCenti = (6 * 2.54) * Math.PI;
+		double degreesToGo = numberOfCenti / circumInCenti;
+		//number of degrees to turn
+		return degreesToGo;
+	}
 	public void racing(){
 		driveTrain.arcadeDrive(rotate(), throttle());
 	}
