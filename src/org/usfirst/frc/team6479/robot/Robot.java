@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.Sendable;
 import edu.wpi.first.wpilibj.Spark;
@@ -55,6 +56,8 @@ public class Robot extends IterativeRobot {
 	//which auto is selected
 	String autoSelected;
 	
+	
+	
 	//chooser for tele
 	SendableChooser<String> teleChooser = new SendableChooser<>();
 	//tele options
@@ -78,9 +81,12 @@ public class Robot extends IterativeRobot {
 	Spark leftDrive = new Spark(0);
 	Spark rightDrive = new Spark(1);
 	
-	
+	PIDController pid;
+	PIDController pid2;
 	
 	CustomDrive driveTrain = new CustomDrive(leftDrive, rightDrive);
+	
+	
 	
 	//enums for left and right joystick on
 	public enum JoystickOn {
@@ -109,6 +115,21 @@ public class Robot extends IterativeRobot {
 	//	gyro.startThread();
 		//gyro.startThread();
 		
+		//enable PID's
+		 pid =new PIDController(0,0,0,gyro,leftDrive);
+		 pid2 =new PIDController(0,0,0,gyro,rightDrive);
+		 
+			//init the encoders
+			leftDriveEncoder = new Encoder(0, 1, false, Encoder.EncodingType.k4X);
+			rightDriveEncoder = new Encoder(3, 4, true, Encoder.EncodingType.k4X);
+			//set the time until when the robot is considered stopped, set in seconds
+			leftDriveEncoder.setMaxPeriod(.05);
+			rightDriveEncoder.setMaxPeriod(.05);
+			//set distance per pulse to be 1 inch
+			rightDriveEncoder.setDistancePerPulse((6 * Math.PI) / 360);
+			leftDriveEncoder.setDistancePerPulse((6 * Math.PI) / 360);
+		
+		
 		autoChooser.addDefault("Default Auto", autoDefault);
 		autoChooser.addObject("First Auto", autoOne);
 		autoChooser.addObject("Second Auto", autoTwo);
@@ -121,7 +142,7 @@ public class Robot extends IterativeRobot {
 		
 		
 		SmartDashboard.putNumber("Angel to move", 90);
-		SmartDashboard.getNumber("Feet to move", 3);
+		SmartDashboard.putNumber("Feet to move", 3);
 		
 		
 		//left drive is inverted since both motors are built identical
@@ -191,12 +212,9 @@ public class Robot extends IterativeRobot {
 		//get the selected autonomous
 		autoSelected = autoChooser.getSelected();
 		
-		//init the encoders
-		leftDriveEncoder = new Encoder(0, 1, false, Encoder.EncodingType.k4X);
-		rightDriveEncoder = new Encoder(3, 4, false, Encoder.EncodingType.k4X);
-		//set the time until when the robot is considered stopped, set in seconds
-		leftDriveEncoder.setMaxPeriod(.05);
-		rightDriveEncoder.setMaxPeriod(.05);
+		//reset the encoders
+		leftDriveEncoder.reset();
+		rightDriveEncoder.reset();
 		
 		//initialize RobotDrove and Gyro
 	//	myDrive = new RobotDrive(1,2);
@@ -283,12 +301,10 @@ public class Robot extends IterativeRobot {
 		if(teleSelected.equals(teleArcade)) {
 			stickOn = JoystickOn.RIGHT;
 		}
-		//init the encoders
-		leftDriveEncoder = new Encoder(0, 1, false, Encoder.EncodingType.k4X);
-		rightDriveEncoder = new Encoder(3, 4, true, Encoder.EncodingType.k4X);
-		//set the time until when the robot is considered stopped, set in seconds
-		leftDriveEncoder.setMaxPeriod(.05);
-		rightDriveEncoder.setMaxPeriod(.05);
+
+		//reset the encoders
+		leftDriveEncoder.reset();
+		rightDriveEncoder.reset();
 	
 		angleToMove = SmartDashboard.getNumber("Angel to move", 90);
 		feetToMove = SmartDashboard.getNumber("Feet to move", 3);
@@ -307,15 +323,20 @@ public class Robot extends IterativeRobot {
 		 SmartDashboard.putNumber("current angle", gyro.getAngle());
 		
 		if(xbox.getAButton()){
-	
+			pid.enable();
+			pid2.enable();
+			
 			gyro.reset();
 			SmartDashboard.putNumber("Angle before", gyro.getAngle());
-			while(Math.abs(gyro.getAngle()) <= angleToMove){
-				rightDrive.setSpeed(-0.30);
-				leftDrive.setSpeed(-0.30);
-	
+			while(Math.abs(gyro.getAngle()) <= 360){
+				rightDrive.setSpeed(-pid.get());
+				SmartDashboard.putNumber("PID", pid.get());
+				leftDrive.setSpeed(-pid2.get());
+				
 				//Timer.delay(0.004);
 			}
+			pid.disable();
+			pid2.disable();
 			leftDrive.setSpeed(0);
 			rightDrive.setSpeed(0);
 			SmartDashboard.putNumber("Angle after1", gyro.getAngle());
@@ -326,10 +347,10 @@ public class Robot extends IterativeRobot {
 		if(xbox.getYButton()){
 			rightDriveEncoder.reset();
 			leftDriveEncoder.reset();
-			while(Math.abs(rightDriveEncoder.getDistance()) <= driveNumberOfFeet(feetToMove) &&
-						Math.abs(leftDriveEncoder.getDistance()) <= driveNumberOfFeet(feetToMove)){
-				rightDrive.setSpeed(0.30);
-				leftDrive.setSpeed(-0.30);
+			while(Math.abs(rightDriveEncoder.getDistance()) <= (feetToMove * 12) &&
+						Math.abs(leftDriveEncoder.getDistance()) <= (feetToMove * 12)){
+				rightDrive.setSpeed(-0.30);
+				leftDrive.setSpeed(0.30);
 			}
 			leftDrive.setSpeed(0);
 			rightDrive.setSpeed(0);
@@ -355,16 +376,6 @@ public class Robot extends IterativeRobot {
 			break;
 		}
 		
-	}
-	
-	public double driveNumberOfFeet(double feet)
-	{
-		double numberOfInches = feet / 12;
-		double numberOfCenti = numberOfInches * 2.54;
-		double circumInCenti = (6 * 2.54) * Math.PI;
-		double degreesToGo = numberOfCenti / circumInCenti;
-		//number of degrees to turn
-		return degreesToGo;
 	}
 	public void racing(){
 		driveTrain.arcadeDrive(rotate(), throttle());
