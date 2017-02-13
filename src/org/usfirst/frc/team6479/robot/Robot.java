@@ -1,7 +1,11 @@
 package org.usfirst.frc.team6479.robot;
 
+import java.util.ArrayList;
+
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
@@ -10,6 +14,7 @@ import edu.wpi.cscore.CvSource;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.AnalogGyro;
+import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Encoder;
@@ -100,18 +105,30 @@ public class Robot extends IterativeRobot {
 	Encoder leftDriveEncoder;
 	Encoder rightDriveEncoder;
 
-	
+	AnalogInput sonar;
 	//RobotDrive and Gyro for autonomous
 //	RobotDrive myDrive;
-//	ADXRS450_Gyro gyro;
+	ADXRS450Gyro gyro;
 	double Kp = 0.03;
+	boolean keepTurning;
+	
+	
+	private double centerX = 0.0;
+	private final Object imgLock = new Object();
+	private boolean turn = false;
+	
+	public static boolean gyroUpdate = false;
+	
+	//camera thread
+	Thread thread;
 	/**
 	 * This function is run when the robot is first started up and should be
 	 * used for any initialization code.
 	 */
 	@Override
 	public void robotInit() {
-		GripPipelineLight pipe = new GripPipelineLight();
+		gyro = new ADXRS450Gyro();
+		gyro.startThread();
 		
 	//	gyro = new ADXRS450_Gyro();
 	//	gyro.startThread();
@@ -149,52 +166,82 @@ public class Robot extends IterativeRobot {
 		
 		//left drive is inverted since both motors are built identical
 		leftDrive.setInverted(true);
+		sonar = new AnalogInput(0);
 		
-		visionThread = new Thread(() -> {
+		GripPipelineHSV grip = new GripPipelineHSV();
 			// Get the UsbCamera from CameraServer
 			UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
 			// Set the resolution
-			int xRes = 320;
-			int yRes = 240;
-			camera.setResolution(xRes, yRes);
+			camera.setResolution(640, 480);
+			
+			thread = new Thread(() -> {
+				
 
-			// Get a CvSink. This will capture Mats from the camera
-			CvSink cvSink = CameraServer.getInstance().getVideo();
-			// Setup a CvSource. This will send images back to the Dashboard
-			CvSource outputStream = CameraServer.getInstance().putVideo("Cross Hairs", xRes, yRes);
+				// Get a CvSink. This will capture Mats from the camera
+				CvSink cvSink = CameraServer.getInstance().getVideo();
+				// Setup a CvSource. This will send images back to the Dashboard
+				CvSource outputStream = CameraServer.getInstance().putVideo("Processed", 320, 240);
 
-			// Mats are very memory expensive. Lets reuse this Mat.
-			Mat mat = new Mat();
+				// Mats are very memory expensive. Lets reuse this Mat.
+				Mat mat = new Mat();
+			//	pipe.process(mat);
+				// This cannot be 'true'. The program will never exit if it is. This
+				// lets the robot stop this thread when restarting robot code or
+				// deploying.
+				while (!Thread.interrupted()) {
+					// Tell the CvSink to grab a frame from the camera and put it
+					// in the source mat.  If there is an error notify the output.
+					if (cvSink.grabFrame(mat) == 0) {
+						// Send the output the error.
+						outputStream.notifyError(cvSink.getError());
+						// skip the rest of the current iteration
+						continue;
+					}
+					//process image
+					grip.process(mat);
+				//	mat = grip.hsvThresholdOutput();
 
-			// This cannot be 'true'. The program will never exit if it is. This
-			// lets the robot stop this thread when restarting robot code or
-			// deploying.
-			while (!Thread.interrupted()) {
-				// Tell the CvSink to grab a frame from the camera and put it
-				// in the source mat.  If there is an error notify the output.
-				if (cvSink.grabFrame(mat) == 0) {
-					// Send the output the error.
-					outputStream.notifyError(cvSink.getError());
-					// skip the rest of the current iteration
-					continue;
+					ArrayList<MatOfPoint> contours = grip.filterContoursOutput();
+					Rect r = null;
+					if (contours.size() > 0){
+						r = Imgproc.boundingRect(contours.get(0));
+					}
+				    Rect r2 = null;
+				    if (contours.size() > 1){
+				    	r2 = Imgproc.boundingRect(contours.get(1));	
+				    }
+				    
+					
+			/*		Imgproc.rectangle(mat, new Point(r.x, r.y), new Point(r.x+r.width, r.y+r.height),
+							new Scalar(255, 255, 255), 1);
+					Imgproc.rectangle(mat, new Point(r2.x, r2.y), new Point(r2.x+r2.width, r2.y+r2.height),
+							new Scalar(255, 255, 255), 1);
+			*/	
+				    
+				    Point center = null;
+				    if (r != null && r2 != null){
+				    	center = new Point((r.x+r.width+r2.x)/2, r.y + (r.height/2));	
+				    }
+				    
+				 //   System.out.println("X: " + ((r.x+r.width+r2.x)/2) + "Y: " + (r.y + (r.height/2)));
+					if (center != null){
+						Imgproc.circle(mat, center, 5, new Scalar(255,255,255));
+						centerX = center.x;
+						turn = true;
+					//	System.out.println("Thread");
+					}
+				
+				//	System.out.println("X: " + centerX);
+				//	Imgproc.line(mat, new Point(280, 240), new Point(360, 240), new Scalar(255,255,255));
+					// Give the output stream a new image to display
+					
+				//	outputStream.putFrame(mat);
+				//	outputStream.putFrame(grip.hslThresholdOutput());
 				}
-				pipe.process(mat);
-				mat = pipe.maskOutput();
-				
-				// Put cross hairs on the image
-				int crossWidth = xRes / 20;
-	//			System.out.println("xRex" + xRes);
-	//			System.out.println("width of line" + crossWidth);
-				int crossHeight = yRes / 20;
-				
-				Imgproc.line(mat, new Point((xRes / 2) - (crossWidth / 2), (yRes / 2)), new Point((xRes / 2) + (crossWidth / 2), (yRes / 2)), new Scalar(0, 255, 0), 5);
-				Imgproc.line(mat, new Point((xRes / 2), (yRes / 2) + (crossHeight / 2)), new Point((xRes / 2), (yRes / 2) - (crossHeight / 2)), new Scalar(0, 255, 0), 5);
-				// Give the output stream a new image to display
-				outputStream.putFrame(mat);
-			}
-		});
-		visionThread.setDaemon(true);
-		visionThread.start();
+			});
+			
+			thread.setDaemon(true);
+			thread.start();
 	}
 	
 	/**
@@ -220,7 +267,6 @@ public class Robot extends IterativeRobot {
 		
 		//initialize RobotDrove and Gyro
 	//	myDrive = new RobotDrive(1,2);
-		
 	}
 
 	/**
@@ -295,8 +341,6 @@ public class Robot extends IterativeRobot {
 	 * This function is called at the start of operator control
 	 */
 	
-	private boolean climb = false;
-	
 	@Override
 	public void teleopInit() {
 		//get the teleop driving config
@@ -311,7 +355,6 @@ public class Robot extends IterativeRobot {
 		leftDriveEncoder.reset();
 		rightDriveEncoder.reset();
 	
-		climb = false;
 		
 		angleToMove = SmartDashboard.getNumber("Angel to move", 90);
 		feetToMove = SmartDashboard.getNumber("Feet to move", 3);
@@ -330,8 +373,11 @@ public class Robot extends IterativeRobot {
 	//	 SmartDashboard.putNumber("current angle", gyro.getAngle());
 		
 		if(xbox.getAButton()){
-			pid.enable();
-			pid2.enable();
+			//pid.enable();
+			//pid2.enable();
+			keepTurning = true;
+			gyro.reset();
+			//turn(90);
 			
 /*			gyro.reset();
 			SmartDashboard.putNumber("Angle before", gyro.getAngle());
@@ -370,11 +416,10 @@ public class Robot extends IterativeRobot {
 			climber.set(0.5);
 		//	climber.set(speed);
 			Timer.delay(0.04);
-			System.out.println("Run");
 		}
 		climber.set(0);
 		
-		System.out.println("Stop");
+		//System.out.println("Stop");
 		//choose which teleop is selected
 		switch (teleSelected) {
 		case teleRacing:
@@ -394,6 +439,38 @@ public class Robot extends IterativeRobot {
 			break;
 		}
 		
+	}
+	public void turn(double degrees){
+		double angle = Math.abs(gyro.getAngle());
+		System.out.println("Before Angle: " + angle);
+	
+		while (angle < degrees){	
+			System.out.println("Why");
+			Timer.delay(0.004);
+			//if (gyroUpdate){
+				angle = Math.abs(gyro.getAngle());
+				System.out.println("Angle: " + angle);
+				leftDrive.set(0.3);
+				rightDrive.set(-0.3);
+
+			
+				//comment this out if you want to try a different equation don't change this
+				Timer.delay(0.5*(degrees-angle)/degrees + 0.001);				
+				
+				leftDrive.set(0);
+				rightDrive.set(0);
+				gyroUpdate = false;
+				Timer.delay(0.05);
+			
+			//}
+
+		}
+		leftDrive.set(0);
+		rightDrive.set(0);
+		keepTurning = false;
+		System.out.println("Immediate Angle: " + gyro.getAngle());
+		Timer.delay(5);
+		System.out.println("After Angle: " + gyro.getAngle());
 	}
 	public void racing(){
 		driveTrain.arcadeDrive(rotate(), throttle());
