@@ -23,6 +23,8 @@ import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.Sendable;
 import edu.wpi.first.wpilibj.Spark;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.Victor;
+import edu.wpi.first.wpilibj.VictorSP;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
@@ -86,7 +88,7 @@ public class Robot extends IterativeRobot {
 	
 	CustomDrive driveTrain = new CustomDrive(leftDrive, rightDrive);
 	
-	
+	Victor climber = new Victor(2);
 	
 	//enums for left and right joystick on
 	public enum JoystickOn {
@@ -101,7 +103,7 @@ public class Robot extends IterativeRobot {
 	
 	//RobotDrive and Gyro for autonomous
 //	RobotDrive myDrive;
-	ADXRS450_Gyro gyro;
+//	ADXRS450_Gyro gyro;
 	double Kp = 0.03;
 	/**
 	 * This function is run when the robot is first started up and should be
@@ -111,13 +113,13 @@ public class Robot extends IterativeRobot {
 	public void robotInit() {
 		GripPipelineLight pipe = new GripPipelineLight();
 		
-		gyro = new ADXRS450_Gyro();
+	//	gyro = new ADXRS450_Gyro();
 	//	gyro.startThread();
 		//gyro.startThread();
 		
 		//enable PID's
-		 pid =new PIDController(0,0,0,gyro,leftDrive);
-		 pid2 =new PIDController(0,0,0,gyro,rightDrive);
+//		 pid =new PIDController(0,0,0,gyro,leftDrive);
+//		 pid2 =new PIDController(0,0,0,gyro,rightDrive);
 		 
 			//init the encoders
 			leftDriveEncoder = new Encoder(0, 1, false, Encoder.EncodingType.k4X);
@@ -237,11 +239,11 @@ public class Robot extends IterativeRobot {
 		
 		
 		//gyro.calibrate();
-		gyro.reset();
+//		gyro.reset();
 		//while(isAutonomous() && (leftDriveEncoder.getDistance()<2000) && (rightDriveEncoder.getDistance()<2000)){
 		while(isAutonomous()&& (leftDriveEncoder.getDistance()<1000) && (rightDriveEncoder.getDistance()<1000)){
-			double angle = gyro.getAngle();
-			driveTrain.drive(0.25, -angle*Kp);
+			//double angle = gyro.getAngle();
+		//	driveTrain.drive(0.25, -angle*Kp);
 
 			//System.out.println("Angle: " + angle);
 			//System.out.println("Turn: " + -1*angle*Kp);
@@ -251,7 +253,7 @@ public class Robot extends IterativeRobot {
 		driveTrain.drive(0, 0);
 		
 		
-		gyro.reset();
+/*		gyro.reset();
 		SmartDashboard.putNumber("Angle before", gyro.getAngle());
 		while(isAutonomous() &&Math.abs(gyro.getAngle()) <= 360){
 			rightDrive.setSpeed(-0.30);
@@ -292,6 +294,9 @@ public class Robot extends IterativeRobot {
 	/**
 	 * This function is called at the start of operator control
 	 */
+	
+	private boolean climb = false;
+	
 	@Override
 	public void teleopInit() {
 		//get the teleop driving config
@@ -306,9 +311,11 @@ public class Robot extends IterativeRobot {
 		leftDriveEncoder.reset();
 		rightDriveEncoder.reset();
 	
+		climb = false;
+		
 		angleToMove = SmartDashboard.getNumber("Angel to move", 90);
 		feetToMove = SmartDashboard.getNumber("Feet to move", 3);
-		gyro.reset();
+//		gyro.reset();
 	}
 	double angleToMove;
 	double feetToMove;
@@ -320,13 +327,13 @@ public class Robot extends IterativeRobot {
 		
 		SmartDashboard.putNumber("Left Distance", leftDriveEncoder.getDistance());
 		SmartDashboard.putNumber("Right Distance", rightDriveEncoder.getDistance());
-		 SmartDashboard.putNumber("current angle", gyro.getAngle());
+	//	 SmartDashboard.putNumber("current angle", gyro.getAngle());
 		
 		if(xbox.getAButton()){
 			pid.enable();
 			pid2.enable();
 			
-			gyro.reset();
+/*			gyro.reset();
 			SmartDashboard.putNumber("Angle before", gyro.getAngle());
 			while(Math.abs(gyro.getAngle()) <= 360){
 				rightDrive.setSpeed(-pid.get());
@@ -344,6 +351,8 @@ public class Robot extends IterativeRobot {
 			SmartDashboard.putNumber("Angle after2", gyro.getAngle());
 			
 		}
+	*/
+		}
 		if(xbox.getYButton()){
 			rightDriveEncoder.reset();
 			leftDriveEncoder.reset();
@@ -356,7 +365,16 @@ public class Robot extends IterativeRobot {
 			rightDrive.setSpeed(0);
 			
 		}
+
+		while (xbox.getBButton()){
+			climber.set(0.5);
+		//	climber.set(speed);
+			Timer.delay(0.04);
+			System.out.println("Run");
+		}
+		climber.set(0);
 		
+		System.out.println("Stop");
 		//choose which teleop is selected
 		switch (teleSelected) {
 		case teleRacing:
