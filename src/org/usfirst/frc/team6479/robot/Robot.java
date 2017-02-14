@@ -110,7 +110,7 @@ public class Robot extends IterativeRobot {
 //	RobotDrive myDrive;
 	ADXRS450Gyro gyro;
 	double Kp = 0.03;
-	boolean keepTurning;
+	private boolean keepTurning;
 	
 	
 	private double centerX = 0.0;
@@ -166,6 +166,8 @@ public class Robot extends IterativeRobot {
 		
 		//left drive is inverted since both motors are built identical
 		leftDrive.setInverted(true);
+		
+		
 		sonar = new AnalogInput(0);
 		
 		GripPipelineHSV grip = new GripPipelineHSV();
@@ -267,6 +269,9 @@ public class Robot extends IterativeRobot {
 		
 		//initialize RobotDrove and Gyro
 	//	myDrive = new RobotDrive(1,2);
+		gyro.reset();
+		gyro.driftRate = 0;
+		keepTurning =true;
 	}
 
 	/**
@@ -281,13 +286,16 @@ public class Robot extends IterativeRobot {
 		driveTrain.tankDrive(-.8, .8);
 		Timer.delay(3);
 		}
-	*/
-		
+	*/	
+		if(keepTurning)
+		{
+			turn(90);
+		}
 		
 		//gyro.calibrate();
 //		gyro.reset();
 		//while(isAutonomous() && (leftDriveEncoder.getDistance()<2000) && (rightDriveEncoder.getDistance()<2000)){
-		while(isAutonomous()&& (leftDriveEncoder.getDistance()<1000) && (rightDriveEncoder.getDistance()<1000)){
+		/*while(isAutonomous()&& (leftDriveEncoder.getDistance()<1000) && (rightDriveEncoder.getDistance()<1000)){
 			//double angle = gyro.getAngle();
 		//	driveTrain.drive(0.25, -angle*Kp);
 
@@ -296,7 +304,7 @@ public class Robot extends IterativeRobot {
 			Timer.delay(0.004);
 		}
 		
-		driveTrain.drive(0, 0);
+		driveTrain.drive(0, 0);*/
 		
 		
 /*		gyro.reset();
@@ -358,7 +366,7 @@ public class Robot extends IterativeRobot {
 		
 		angleToMove = SmartDashboard.getNumber("Angel to move", 90);
 		feetToMove = SmartDashboard.getNumber("Feet to move", 3);
-//		gyro.reset();
+		gyro.reset();
 	}
 	double angleToMove;
 	double feetToMove;
@@ -375,9 +383,9 @@ public class Robot extends IterativeRobot {
 		if(xbox.getAButton()){
 			//pid.enable();
 			//pid2.enable();
-			keepTurning = true;
 			gyro.reset();
-			//turn(90);
+			keepTurning =true;
+
 			
 /*			gyro.reset();
 			SmartDashboard.putNumber("Angle before", gyro.getAngle());
@@ -399,6 +407,12 @@ public class Robot extends IterativeRobot {
 		}
 	*/
 		}
+		
+		if(keepTurning)
+		{
+			turn(90);
+		}
+		
 		if(xbox.getYButton()){
 			rightDriveEncoder.reset();
 			leftDriveEncoder.reset();
@@ -412,12 +426,15 @@ public class Robot extends IterativeRobot {
 			
 		}
 
-		while (xbox.getBButton()){
+		if (xbox.getBButton()){
 			climber.set(0.5);
 		//	climber.set(speed);
-			Timer.delay(0.04);
+			//Timer.delay(0.04);
 		}
+		else
+		{
 		climber.set(0);
+		}
 		
 		//System.out.println("Stop");
 		//choose which teleop is selected
@@ -444,25 +461,27 @@ public class Robot extends IterativeRobot {
 		double angle = Math.abs(gyro.getAngle());
 		System.out.println("Before Angle: " + angle);
 	
-		while (angle < degrees){	
-			System.out.println("Why");
+		while (angle < degrees){
 			Timer.delay(0.004);
-			//if (gyroUpdate){
+			if (gyroUpdate){
 				angle = Math.abs(gyro.getAngle());
 				System.out.println("Angle: " + angle);
+				SmartDashboard.putNumber("Current turn angle", angle);
 				leftDrive.set(0.3);
 				rightDrive.set(-0.3);
-
 			
 				//comment this out if you want to try a different equation don't change this
-				Timer.delay(0.5*(degrees-angle)/degrees + 0.001);				
-				
+				//Timer.delay(0.5*(degrees-angle)/degrees + 0.001);				
+				Timer.delay(.05);
 				leftDrive.set(0);
 				rightDrive.set(0);
 				gyroUpdate = false;
 				Timer.delay(0.05);
 			
-			//}
+			}
+			
+		
+			
 
 		}
 		leftDrive.set(0);
