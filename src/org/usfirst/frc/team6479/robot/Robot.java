@@ -88,8 +88,13 @@ public class Robot extends IterativeRobot {
 	Spark leftDrive = new Spark(0);
 	Spark rightDrive = new Spark(1);
 	
-	PIDController pid;
-	PIDController pid2;
+	PIDController pidTurnLeftDrive;
+	PIDController pidTurnRightDrive;
+	double pidTP;
+	double pidTI;
+	double pidTD;
+	double pidTF;
+	
 	
 	CustomDrive driveTrain = new CustomDrive(leftDrive, rightDrive);
 	
@@ -110,14 +115,12 @@ public class Robot extends IterativeRobot {
 //	RobotDrive myDrive;
 	ADXRS450Gyro gyro;
 	double Kp = 0.03;
-	private boolean keepTurning;
+	
 	
 	
 	private double centerX = 0.0;
 	private final Object imgLock = new Object();
 	private boolean turn = false;
-	
-	public static boolean gyroUpdate = false;
 	
 	//camera thread
 	Thread thread;
@@ -130,14 +133,30 @@ public class Robot extends IterativeRobot {
 		gyro = new ADXRS450Gyro();
 		gyro.startThread();
 		
-	//	gyro = new ADXRS450_Gyro();
-	//	gyro.startThread();
-		//gyro.startThread();
+		pidTP = .01;
+		pidTI = 0;
+		pidTD = 0;
+		pidTF = 0;
+		SmartDashboard.putNumber("PID P", pidTP);
+		SmartDashboard.putNumber("PID I", pidTI);
+		SmartDashboard.putNumber("PID D", pidTD);
+		SmartDashboard.putNumber("PID F", pidTF);
 		
 		//enable PID's
-//		 pid =new PIDController(0,0,0,gyro,leftDrive);
-//		 pid2 =new PIDController(0,0,0,gyro,rightDrive);
-		 
+		pidTurnLeftDrive =new PIDController(pidTP, pidTI, pidTD, pidTF, gyro, leftDrive);
+		pidTurnRightDrive =new PIDController(pidTP, pidTI, pidTD, pidTF, gyro, rightDrive);
+		pidTurnLeftDrive.setInputRange(-180, 180);
+		pidTurnRightDrive.setInputRange(-180, 180);
+		pidTurnLeftDrive.setOutputRange(-1, 1);
+		pidTurnRightDrive.setOutputRange(-1, 1);
+		pidTurnLeftDrive.setAbsoluteTolerance(1);
+		pidTurnRightDrive.setAbsoluteTolerance(1);
+		pidTurnLeftDrive.setContinuous(true);
+		pidTurnRightDrive.setContinuous(true);
+		
+		
+		
+		
 			//init the encoders
 			leftDriveEncoder = new Encoder(0, 1, false, Encoder.EncodingType.k4X);
 			rightDriveEncoder = new Encoder(3, 4, true, Encoder.EncodingType.k4X);
@@ -270,8 +289,6 @@ public class Robot extends IterativeRobot {
 		//initialize RobotDrove and Gyro
 	//	myDrive = new RobotDrive(1,2);
 		gyro.reset();
-		gyro.driftRate = 0;
-		keepTurning =true;
 	}
 
 	/**
@@ -287,10 +304,20 @@ public class Robot extends IterativeRobot {
 		Timer.delay(3);
 		}
 	*/	
-		if(keepTurning)
+		/*if(keepTurning)
 		{
 			turn(90);
+		}*/
+		
+		rightDriveEncoder.reset();
+		leftDriveEncoder.reset();
+		while(Math.abs(rightDriveEncoder.getDistance()) <= (feetToMove * 12) &&
+					Math.abs(leftDriveEncoder.getDistance()) <= (feetToMove * 12)){
+			rightDrive.setSpeed(-0.30);
+			leftDrive.setSpeed(0.30);
 		}
+		leftDrive.setSpeed(0);
+		rightDrive.setSpeed(0);
 		
 		//gyro.calibrate();
 //		gyro.reset();
@@ -364,6 +391,14 @@ public class Robot extends IterativeRobot {
 		rightDriveEncoder.reset();
 	
 		
+		pidTP = SmartDashboard.getNumber("PID P", pidTP);
+		pidTI = SmartDashboard.getNumber("PID I", pidTI);
+		pidTD = SmartDashboard.getNumber("PID D", pidTD);
+		pidTF = SmartDashboard.getNumber("PID F", pidTF);
+		pidTurnLeftDrive.setPID(pidTP, pidTI, pidTD, pidTF);
+		pidTurnRightDrive.setPID(pidTP, pidTI, pidTD, pidTF);
+		
+		
 		angleToMove = SmartDashboard.getNumber("Angel to move", 90);
 		feetToMove = SmartDashboard.getNumber("Feet to move", 3);
 		gyro.reset();
@@ -378,14 +413,14 @@ public class Robot extends IterativeRobot {
 		
 		SmartDashboard.putNumber("Left Distance", leftDriveEncoder.getDistance());
 		SmartDashboard.putNumber("Right Distance", rightDriveEncoder.getDistance());
-	//	 SmartDashboard.putNumber("current angle", gyro.getAngle());
 		
 		if(xbox.getAButton()){
-			//pid.enable();
-			//pid2.enable();
+			pidTurnLeftDrive.enable();
+			pidTurnRightDrive.enable();
 			gyro.reset();
-			keepTurning =true;
-
+			turn(90);
+			//pidLeftDrive.disable();
+			//pidRightDrive.disable();
 			
 /*			gyro.reset();
 			SmartDashboard.putNumber("Angle before", gyro.getAngle());
@@ -406,11 +441,6 @@ public class Robot extends IterativeRobot {
 			
 		}
 	*/
-		}
-		
-		if(keepTurning)
-		{
-			turn(90);
 		}
 		
 		if(xbox.getYButton()){
@@ -448,6 +478,7 @@ public class Robot extends IterativeRobot {
 			leftDrive.set(xbox.getY(Hand.kLeft) );
 			//calculates right side, sets right drive speed to y axis of xbox right
 				rightDrive.set(xbox.getY(Hand.kRight) );
+			
 			break;
 		case teleArcade:
 			//call the arcade function
@@ -458,38 +489,18 @@ public class Robot extends IterativeRobot {
 		
 	}
 	public void turn(double degrees){
-		double angle = Math.abs(gyro.getAngle());
-		System.out.println("Before Angle: " + angle);
-	
-		while (angle < degrees){
-			Timer.delay(0.004);
-			if (gyroUpdate){
-				angle = Math.abs(gyro.getAngle());
-				System.out.println("Angle: " + angle);
-				SmartDashboard.putNumber("Current turn angle", angle);
-				leftDrive.set(0.3);
-				rightDrive.set(-0.3);
-			
-				//comment this out if you want to try a different equation don't change this
-				//Timer.delay(0.5*(degrees-angle)/degrees + 0.001);				
-				Timer.delay(.05);
-				leftDrive.set(0);
-				rightDrive.set(0);
-				gyroUpdate = false;
-				Timer.delay(0.05);
-			
+		//half the degrees
+		double degreesToMove = degrees / 2;
+		pidTurnLeftDrive.setSetpoint(degreesToMove);
+		pidTurnRightDrive.setSetpoint(-degreesToMove);
+		loop: while(true) {
+			if(Math.abs(gyro.getAngle()) >= Math.abs(degreesToMove))
+			{
+				pidTurnLeftDrive.disable();
+				pidTurnRightDrive.disable();
+				break loop;
 			}
-			
-		
-			
-
 		}
-		leftDrive.set(0);
-		rightDrive.set(0);
-		keepTurning = false;
-		System.out.println("Immediate Angle: " + gyro.getAngle());
-		Timer.delay(5);
-		System.out.println("After Angle: " + gyro.getAngle());
 	}
 	public void racing(){
 		driveTrain.arcadeDrive(rotate(), throttle());

@@ -5,6 +5,8 @@ import java.nio.ByteOrder;
 import java.util.BitSet;
 import java.util.TimerTask;
 
+import edu.wpi.first.wpilibj.PIDSource;
+import edu.wpi.first.wpilibj.PIDSourceType;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.SPI.Port;
 import edu.wpi.first.wpilibj.Timer;
@@ -12,7 +14,7 @@ import edu.wpi.first.wpilibj.Timer;
 /**
  * @author Kevin Harrilal (kevin@team2168.org)
  */
-public class ADXRS450Gyro {
+public class ADXRS450Gyro implements PIDSource {
 
 	static final int DATA_SIZE = 4; //4 bytes = 32 bits
 	static final byte PARITY_BIT = (byte) 0x01; //parity check on first bit
@@ -303,7 +305,6 @@ public class ADXRS450Gyro {
 		//	currentRate = 0;
 
 		angle += (currentRate - driftRate) * deltaTime;
-		Robot.gyroUpdate = true;
 		/*
 		 * Periodically update our drift rate by normalizing out drift
 		 * while the robot is not moving.
@@ -358,4 +359,40 @@ public class ADXRS450Gyro {
 			gyro.update();
 		}
 	}
+
+	  private PIDSourceType m_pidSource = PIDSourceType.kDisplacement;
+
+	  /**
+	   * Set which parameter of the gyro you are using as a process control variable. The Gyro class
+	   * supports the rate and displacement parameters
+	   *
+	   * @param pidSource An enum to select the parameter.
+	   */
+	  @Override
+	  public void setPIDSourceType(PIDSourceType pidSource) {
+	    m_pidSource = pidSource;
+	  }
+
+	  @Override
+	  public PIDSourceType getPIDSourceType() {
+	    return m_pidSource;
+	  }
+
+	  /**
+	   * Get the output of the gyro for use with PIDControllers. May be the angle or rate depending on
+	   * the set PIDSourceType
+	   *
+	   * @return the output according to the gyro
+	   */
+	  @Override
+	  public double pidGet() {
+	    switch (m_pidSource) {
+	      case kRate:
+	        return getRate();
+	      case kDisplacement:
+	        return getAngle();
+	      default:
+	        return 0.0;
+	    }
+	  }
 }
