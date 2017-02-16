@@ -132,7 +132,6 @@ public class Robot extends IterativeRobot {
 	public void robotInit() {
 		gyro = new ADXRS450Gyro();
 		gyro.startThread();
-		
 		pidTP = .01;
 		pidTI = 0;
 		pidTD = 0;
@@ -183,7 +182,7 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putNumber("Feet to move", 3);
 		
 		
-		//left drive is inverted since both motors are built identical
+		//left drive is inverted since both motors are built idfentically
 		leftDrive.setInverted(true);
 		
 		
@@ -455,15 +454,22 @@ public class Robot extends IterativeRobot {
 			rightDrive.setSpeed(0);
 			
 		}
-
-		if (xbox.getBButton()){
-			climber.set(0.5);
+		double climbSpeed = 0.5;
+		
+		while (xbox.getBButton()){
+			climber.set(climbSpeed);
 		//	climber.set(speed);
 			//Timer.delay(0.04);
+		} while (xbox.getXButton()) {
+			climber.set(-climbSpeed);
 		}
-		else
-		{
+		
 		climber.set(0);
+		
+		if (xbox.getBumper(Hand.kRight)){
+			climbSpeed = climbSpeed + 0.25;
+		} else if (xbox.getBumper(Hand.kLeft)){
+			climbSpeed = climbSpeed - 0.25;
 		}
 		
 		//System.out.println("Stop");
@@ -493,14 +499,13 @@ public class Robot extends IterativeRobot {
 		double degreesToMove = degrees / 2;
 		pidTurnLeftDrive.setSetpoint(degreesToMove);
 		pidTurnRightDrive.setSetpoint(-degreesToMove);
-		loop: while(true) {
-			if(Math.abs(gyro.getAngle()) >= Math.abs(degreesToMove))
+		
+		while(Math.abs(gyro.getAngle()) >= Math.abs(degreesToMove))
 			{
 				pidTurnLeftDrive.disable();
 				pidTurnRightDrive.disable();
-				break loop;
 			}
-		}
+		
 	}
 	public void racing(){
 		driveTrain.arcadeDrive(rotate(), throttle());
