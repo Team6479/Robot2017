@@ -94,7 +94,14 @@ public class Robot extends IterativeRobot {
 	double pidTI;
 	double pidTD;
 	double pidTF;
+
 	
+	PIDController pidDriveLeftDrive;
+	PIDController pidDriveRightDrive;
+	double pidDP;
+	double pidDI;
+	double pidDD;
+	double pidDF;
 	
 	CustomDrive driveTrain = new CustomDrive(leftDrive, rightDrive);
 	
@@ -133,20 +140,20 @@ public class Robot extends IterativeRobot {
 		gyro = new ADXRS450Gyro();
 		gyro.startThread();
 		
-		pidTP = .01;
+		pidTP = .05;
 		pidTI = 0;
-		pidTD = 0;
+		pidTD = .01;
 		pidTF = 0;
-		SmartDashboard.putNumber("PID P", pidTP);
-		SmartDashboard.putNumber("PID I", pidTI);
-		SmartDashboard.putNumber("PID D", pidTD);
-		SmartDashboard.putNumber("PID F", pidTF);
+		SmartDashboard.putNumber("PIDT P", pidTP);
+		SmartDashboard.putNumber("PIDT I", pidTI);
+		SmartDashboard.putNumber("PIDT D", pidTD);
+		SmartDashboard.putNumber("PIDT F", pidTF);
 		
 		//enable PID's
 		pidTurnLeftDrive =new PIDController(pidTP, pidTI, pidTD, pidTF, gyro, leftDrive);
 		pidTurnRightDrive =new PIDController(pidTP, pidTI, pidTD, pidTF, gyro, rightDrive);
-		pidTurnLeftDrive.setInputRange(-180, 180);
-		pidTurnRightDrive.setInputRange(-180, 180);
+		pidTurnLeftDrive.setInputRange(-1200, 1200);
+		pidTurnRightDrive.setInputRange(-1200, 1200);
 		pidTurnLeftDrive.setOutputRange(-1, 1);
 		pidTurnRightDrive.setOutputRange(-1, 1);
 		pidTurnLeftDrive.setAbsoluteTolerance(1);
@@ -166,6 +173,28 @@ public class Robot extends IterativeRobot {
 			//set distance per pulse to be 1 inch
 			rightDriveEncoder.setDistancePerPulse((6 * Math.PI) / 360);
 			leftDriveEncoder.setDistancePerPulse((6 * Math.PI) / 360);
+			
+			
+			pidDP = .01;
+			pidDI = 0;
+			pidDD = 0;
+			pidDF = 0;
+			SmartDashboard.putNumber("PIDD P", pidDP);
+			SmartDashboard.putNumber("PIDD I", pidDI);
+			SmartDashboard.putNumber("PIDD D", pidDD);
+			SmartDashboard.putNumber("PIDD F", pidDF);
+			
+			//enable PID's
+			pidDriveLeftDrive =new PIDController(pidDP, pidDI, pidDD, pidDF, leftDriveEncoder, leftDrive);
+			pidDriveRightDrive =new PIDController(pidDP, pidDI, pidDD, pidDF, rightDriveEncoder, rightDrive);
+			pidDriveLeftDrive.setInputRange(-180, 180);
+			pidDriveRightDrive.setInputRange(-180, 180);
+			pidDriveLeftDrive.setOutputRange(-1, 1);
+			pidDriveRightDrive.setOutputRange(-1, 1);
+			pidDriveLeftDrive.setAbsoluteTolerance(1);
+			pidDriveRightDrive.setAbsoluteTolerance(1);
+			pidDriveLeftDrive.setContinuous(true);
+			pidDriveRightDrive.setContinuous(true);
 		
 		
 		autoChooser.addDefault("Default Auto", autoDefault);
@@ -179,7 +208,7 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putData("Tele Choices", teleChooser);
 		
 		
-		SmartDashboard.putNumber("Angel to move", 90);
+		SmartDashboard.putNumber("Angle to move", 90);
 		SmartDashboard.putNumber("Feet to move", 3);
 		
 		
@@ -296,18 +325,6 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousPeriodic() {
-	//	SmartDashboard.putNumber("Left Distance", leftDriveEncoder.getDistance());
-	//	SmartDashboard.putNumber("Right Distance", rightDriveEncoder.getDistance());
-		
-	/*	while(isAutonomous()){
-		driveTrain.tankDrive(-.8, .8);
-		Timer.delay(3);
-		}
-	*/	
-		/*if(keepTurning)
-		{
-			turn(90);
-		}*/
 		
 		rightDriveEncoder.reset();
 		leftDriveEncoder.reset();
@@ -319,57 +336,7 @@ public class Robot extends IterativeRobot {
 		leftDrive.setSpeed(0);
 		rightDrive.setSpeed(0);
 		
-		//gyro.calibrate();
-//		gyro.reset();
-		//while(isAutonomous() && (leftDriveEncoder.getDistance()<2000) && (rightDriveEncoder.getDistance()<2000)){
-		/*while(isAutonomous()&& (leftDriveEncoder.getDistance()<1000) && (rightDriveEncoder.getDistance()<1000)){
-			//double angle = gyro.getAngle();
-		//	driveTrain.drive(0.25, -angle*Kp);
-
-			//System.out.println("Angle: " + angle);
-			//System.out.println("Turn: " + -1*angle*Kp);
-			Timer.delay(0.004);
-		}
 		
-		driveTrain.drive(0, 0);*/
-		
-		
-/*		gyro.reset();
-		SmartDashboard.putNumber("Angle before", gyro.getAngle());
-		while(isAutonomous() &&Math.abs(gyro.getAngle()) <= 360){
-			rightDrive.setSpeed(-0.30);
-			leftDrive.setSpeed(-0.30);
-		}
-		leftDrive.setSpeed(0);
-		rightDrive.setSpeed(0);
-		Timer.delay(5);
-		SmartDashboard.putNumber("Angle after", gyro.getAngle());
-		/*switch (autoSelected) {
-		case autoOne:
-			driveTrain.tankDrive(-.8, .8);
-			
-		
-			break;
-		case autoTwo:
-			// Put custom auto code here
-			break;
-		case autoDefault:
-		default:
-			// Put default auto code here
-			
-			//basic autonomous, drive forward, then turn left
-			if(Math.abs(leftDriveEncoder.getDistance()) < 600 && Math.abs(rightDriveEncoder.getDistance()) < 600)
-			{
-				leftDrive.set(-.5);
-				rightDrive.set(.5);
-			}
-			else {
-				leftDrive.set(0);
-				rightDrive.set(0);
-			}
-			break;
-		}
-		*/
 	}
 
 	/**
@@ -391,15 +358,22 @@ public class Robot extends IterativeRobot {
 		rightDriveEncoder.reset();
 	
 		
-		pidTP = SmartDashboard.getNumber("PID P", pidTP);
-		pidTI = SmartDashboard.getNumber("PID I", pidTI);
-		pidTD = SmartDashboard.getNumber("PID D", pidTD);
-		pidTF = SmartDashboard.getNumber("PID F", pidTF);
+		pidTP = SmartDashboard.getNumber("PIDT P", pidTP);
+		pidTI = SmartDashboard.getNumber("PIDT I", pidTI);
+		pidTD = SmartDashboard.getNumber("PIDT D", pidTD);
+		pidTF = SmartDashboard.getNumber("PIDT F", pidTF);
 		pidTurnLeftDrive.setPID(pidTP, pidTI, pidTD, pidTF);
 		pidTurnRightDrive.setPID(pidTP, pidTI, pidTD, pidTF);
 		
+		pidDP = SmartDashboard.getNumber("PIDD P", pidDP);
+		pidDI = SmartDashboard.getNumber("PIDD I", pidDI);
+		pidDD = SmartDashboard.getNumber("PIDD D", pidDD);
+		pidDF = SmartDashboard.getNumber("PIDD F", pidDF);
+		pidDriveLeftDrive.setPID(pidDP, pidDI, pidDD, pidDF);
+		pidDriveRightDrive.setPID(pidDP, pidDI, pidDD, pidDF);
 		
-		angleToMove = SmartDashboard.getNumber("Angel to move", 90);
+		
+		angleToMove = SmartDashboard.getNumber("Angle to move", 90);
 		feetToMove = SmartDashboard.getNumber("Feet to move", 3);
 		gyro.reset();
 	}
@@ -415,58 +389,20 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putNumber("Right Distance", rightDriveEncoder.getDistance());
 		
 		if(xbox.getAButton()){
-			pidTurnLeftDrive.enable();
-			pidTurnRightDrive.enable();
-			gyro.reset();
-			turn(90);
-			//pidLeftDrive.disable();
-			//pidRightDrive.disable();
-			
-/*			gyro.reset();
-			SmartDashboard.putNumber("Angle before", gyro.getAngle());
-			while(Math.abs(gyro.getAngle()) <= 360){
-				rightDrive.setSpeed(-pid.get());
-				SmartDashboard.putNumber("PID", pid.get());
-				leftDrive.setSpeed(-pid2.get());
-				
-				//Timer.delay(0.004);
-			}
-			pid.disable();
-			pid2.disable();
-			leftDrive.setSpeed(0);
-			rightDrive.setSpeed(0);
-			SmartDashboard.putNumber("Angle after1", gyro.getAngle());
-			Timer.delay(5);
-			SmartDashboard.putNumber("Angle after2", gyro.getAngle());
-			
-		}
-	*/
+			turn(angleToMove);
 		}
 		
 		if(xbox.getYButton()){
-			rightDriveEncoder.reset();
-			leftDriveEncoder.reset();
-			while(Math.abs(rightDriveEncoder.getDistance()) <= (feetToMove * 12) &&
-						Math.abs(leftDriveEncoder.getDistance()) <= (feetToMove * 12)){
-				rightDrive.setSpeed(-0.30);
-				leftDrive.setSpeed(0.30);
-			}
-			leftDrive.setSpeed(0);
-			rightDrive.setSpeed(0);
-			
+			drive(feetToMove);
 		}
-
 		if (xbox.getBButton()){
 			climber.set(0.5);
-		//	climber.set(speed);
-			//Timer.delay(0.04);
 		}
 		else
 		{
-		climber.set(0);
+			climber.set(0);
 		}
 		
-		//System.out.println("Stop");
 		//choose which teleop is selected
 		switch (teleSelected) {
 		case teleRacing:
@@ -488,11 +424,33 @@ public class Robot extends IterativeRobot {
 		}
 		
 	}
+	public void drive(double feet) {
+		leftDriveEncoder.reset();
+		rightDriveEncoder.reset();
+		//convert to inches
+		double inchesToMove = feet * 12;
+		pidDriveLeftDrive.setSetpoint(-inchesToMove);
+		pidDriveRightDrive.setSetpoint(-inchesToMove);
+		pidDriveLeftDrive.enable();
+		pidDriveRightDrive.enable();
+		loop: while(true) {
+			if(Math.abs(rightDriveEncoder.getDistance()) >= Math.abs(inchesToMove) &&
+					Math.abs(leftDriveEncoder.getDistance()) >= Math.abs(inchesToMove))
+			{	
+				pidDriveLeftDrive.disable();
+				pidDriveRightDrive.disable();
+				break loop;
+			}
+		}
+	}
 	public void turn(double degrees){
+		gyro.reset();
 		//half the degrees
 		double degreesToMove = degrees / 2;
 		pidTurnLeftDrive.setSetpoint(degreesToMove);
 		pidTurnRightDrive.setSetpoint(-degreesToMove);
+		pidTurnLeftDrive.enable();
+		pidTurnRightDrive.enable();
 		loop: while(true) {
 			if(Math.abs(gyro.getAngle()) >= Math.abs(degreesToMove))
 			{
