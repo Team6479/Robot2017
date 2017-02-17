@@ -42,7 +42,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * Commands for testing robot testing
  * Test functions
  * Custom Dashboard
- * Misc controls for whatever robot needs to do (i.e. climb rope)
  */
 
 /**
@@ -63,8 +62,6 @@ public class Robot extends IterativeRobot {
 	//which auto is selected
 	String autoSelected;
 	
-	
-	
 	//chooser for tele
 	SendableChooser<String> teleChooser = new SendableChooser<>();
 	//tele options
@@ -74,12 +71,6 @@ public class Robot extends IterativeRobot {
 	
 	//which tele is selected
 	String teleSelected;
-	
-	//thread for camera
-	Thread visionThread;
-	//the joysticks
-	//Joystick rightStick = new Joystick(1);
-	//Joystick leftStick = new Joystick(0);
 	
 	//xbox cotroller
 	XboxController xbox = new XboxController(0);
@@ -95,7 +86,6 @@ public class Robot extends IterativeRobot {
 	double pidTD;
 	double pidTF;
 
-	
 	PIDController pidDriveLeftDrive;
 	PIDController pidDriveRightDrive;
 	double pidDP;
@@ -118,19 +108,13 @@ public class Robot extends IterativeRobot {
 	Encoder rightDriveEncoder;
 
 	AnalogInput sonar;
-	//RobotDrive and Gyro for autonomous
-//	RobotDrive myDrive;
 	ADXRS450Gyro gyro;
-	double Kp = 0.03;
-	
-	
-	
-	private double centerX = 0.0;
-	private final Object imgLock = new Object();
-	private boolean turn = false;
 	
 	//camera thread
 	Thread thread;
+	
+	private double centerX = 0.0;
+	private boolean turn = false;
 	/**
 	 * This function is run when the robot is first started up and should be
 	 * used for any initialization code.
@@ -160,9 +144,6 @@ public class Robot extends IterativeRobot {
 		pidTurnRightDrive.setAbsoluteTolerance(1);
 		pidTurnLeftDrive.setContinuous(true);
 		pidTurnRightDrive.setContinuous(true);
-		
-		
-		
 		
 			//init the encoders
 			leftDriveEncoder = new Encoder(0, 1, false, Encoder.EncodingType.k4X);
@@ -211,22 +192,22 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putNumber("Angle to move", 90);
 		SmartDashboard.putNumber("Feet to move", 3);
 		
-		
 		//left drive is inverted since both motors are built identical
 		leftDrive.setInverted(true);
 		
-		
+		//create range finder
 		sonar = new AnalogInput(0);
+		
+		CameraServer.getInstance().startAutomaticCapture("BackView", 1);
 		
 		GripPipelineHSV grip = new GripPipelineHSV();
 			// Get the UsbCamera from CameraServer
-			UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
+			UsbCamera camera = CameraServer.getInstance().startAutomaticCapture("FrontView", 0);
 			// Set the resolution
 			camera.setResolution(640, 480);
 			
 			thread = new Thread(() -> {
 				
-
 				// Get a CvSink. This will capture Mats from the camera
 				CvSink cvSink = CameraServer.getInstance().getVideo();
 				// Setup a CvSource. This will send images back to the Dashboard
@@ -261,32 +242,16 @@ public class Robot extends IterativeRobot {
 				    	r2 = Imgproc.boundingRect(contours.get(1));	
 				    }
 				    
-					
-			/*		Imgproc.rectangle(mat, new Point(r.x, r.y), new Point(r.x+r.width, r.y+r.height),
-							new Scalar(255, 255, 255), 1);
-					Imgproc.rectangle(mat, new Point(r2.x, r2.y), new Point(r2.x+r2.width, r2.y+r2.height),
-							new Scalar(255, 255, 255), 1);
-			*/	
-				    
 				    Point center = null;
 				    if (r != null && r2 != null){
 				    	center = new Point((r.x+r.width+r2.x)/2, r.y + (r.height/2));	
 				    }
 				    
-				 //   System.out.println("X: " + ((r.x+r.width+r2.x)/2) + "Y: " + (r.y + (r.height/2)));
 					if (center != null){
 						Imgproc.circle(mat, center, 5, new Scalar(255,255,255));
 						centerX = center.x;
 						turn = true;
-					//	System.out.println("Thread");
 					}
-				
-				//	System.out.println("X: " + centerX);
-				//	Imgproc.line(mat, new Point(280, 240), new Point(360, 240), new Scalar(255,255,255));
-					// Give the output stream a new image to display
-					
-				//	outputStream.putFrame(mat);
-				//	outputStream.putFrame(grip.hslThresholdOutput());
 				}
 			});
 			
@@ -382,12 +347,9 @@ public class Robot extends IterativeRobot {
 	/**
 	 * This function is called periodically during operator control
 	 */
+	double climbSpeed = 0.5;
 	@Override
 	public void teleopPeriodic() {
-		
-		SmartDashboard.putNumber("Left Distance", leftDriveEncoder.getDistance());
-		SmartDashboard.putNumber("Right Distance", rightDriveEncoder.getDistance());
-		
 		if(xbox.getAButton()){
 			turn(angleToMove);
 		}
@@ -395,12 +357,21 @@ public class Robot extends IterativeRobot {
 		if(xbox.getYButton()){
 			drive(feetToMove);
 		}
-		if (xbox.getBButton()){
-			climber.set(0.5);
-		}
+		
+		
+		if (xbox.getBButton())
+		{
+			climber.set(climbSpeed);
+		} 
 		else
 		{
 			climber.set(0);
+		}
+		
+		if (xbox.getBumper(Hand.kRight)){
+			climbSpeed = climbSpeed + 0.25;
+		} else if (xbox.getBumper(Hand.kLeft)){
+			climbSpeed = climbSpeed - 0.25;
 		}
 		
 		//choose which teleop is selected
@@ -413,8 +384,7 @@ public class Robot extends IterativeRobot {
 			//calculates left side, sets left drive speed to y axis of xbox left
 			leftDrive.set(xbox.getY(Hand.kLeft) );
 			//calculates right side, sets right drive speed to y axis of xbox right
-				rightDrive.set(xbox.getY(Hand.kRight) );
-			
+			rightDrive.set(xbox.getY(Hand.kRight) );
 			break;
 		case teleArcade:
 			//call the arcade function
@@ -468,26 +438,17 @@ public class Robot extends IterativeRobot {
 		//if the right stick is on and the leftstick is clicked
 		//switch which stick is on to left stick
 		if(stickOn == JoystickOn.RIGHT && xbox.getStickButton(Hand.kLeft))
-		{
 			stickOn = JoystickOn.LEFT;
-		}
 		//if the left stick is on and the rightstick is clicked
 		//switch which stick is on to right stick
 		if(stickOn == JoystickOn.LEFT && xbox.getStickButton(Hand.kRight))
-		{
 			stickOn = JoystickOn.RIGHT;
-		}
-		
 		//if the right stick is on, use full drive
 		if(stickOn == JoystickOn.RIGHT)
-		{
 			fullDrive();
-		}
 		//if the left stick is on, use fine drive
 		if(stickOn == JoystickOn.LEFT)
-		{
 			fineDrive();
-		}
 	}
 	//determine if joystick is being moved
 	//param is which joystick on controller
@@ -503,25 +464,6 @@ public class Robot extends IterativeRobot {
 		double x = xbox.getRawAxis(0);
 		//invert
 		return (x * -1);
-	}
-	public boolean isJoystickMoving(Hand hand) {
-		//get x and y
-		double x = xbox.getX(hand);
-		double y = xbox.getY(hand);
-		
-		//is the value of x within .001 of zero
-		boolean isXZero = Math.abs(x) <= .01;
-		
-		//is the value of y within .001 of zero
-		boolean isYZero = Math.abs(y) <= .01;
-		
-		//if x and y are zero, joystick is not moving, return false
-		if(isXZero && isYZero) {
-			return false;
-		}
-		else {
-			return true;
-		}
 	}
 	
 	//for driving
