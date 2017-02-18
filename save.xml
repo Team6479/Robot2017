@@ -1,56 +1,46 @@
 <xml version="1.0">
 <dashboard>
-	<widget field="Selected" type="String" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="27" y="129"/>
-	</widget>
-	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.CameraServerViewer">
-		<location x="273" y="6"/>
-		<width>532</width>
-		<height>373</height>
-		<property name="Camera Choice" value="FrontView"/>
-	</static-widget>
-	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.CameraServerViewer">
-		<location x="819" y="4"/>
-		<width>527</width>
-		<height>374</height>
-		<property name="Camera Choice" value="BackView"/>
-	</static-widget>
-	<widget field="PIDD P" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="141" y="4"/>
-	</widget>
-	<widget field="PIDD I" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="140" y="28"/>
-	</widget>
-	<widget field="PIDD F" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="138" y="79"/>
-	</widget>
-	<widget field="PIDD D" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="138" y="53"/>
-	</widget>
 	<widget field="Auto Choices" type="String Chooser" class="edu.wpi.first.smartdashboard.gui.elements.Chooser">
-		<location x="43" y="107"/>
-	</widget>
-	<widget field="Feet to move" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="4" y="393"/>
+		<location x="0" y="273"/>
 	</widget>
 	<widget field="Tele Choices" type="String Chooser" class="edu.wpi.first.smartdashboard.gui.elements.Chooser">
-		<location x="6" y="102"/>
+		<location x="5" y="256"/>
+	</widget>
+	<widget field="Feet to move" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="231"/>
+	</widget>
+	<widget field="Auto Selector" type="String" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="210"/>
 	</widget>
 	<widget field="Angle to move" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="5" y="369"/>
+		<location x="0" y="189"/>
 	</widget>
 	<widget field="PIDT P" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="3" y="3"/>
+		<location x="0" y="168"/>
+	</widget>
+	<widget field="Selected" type="String" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="147"/>
 	</widget>
 	<widget field="PIDT I" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="3" y="26"/>
+		<location x="0" y="126"/>
 	</widget>
 	<widget field="PIDT F" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="3" y="76"/>
+		<location x="0" y="105"/>
 	</widget>
 	<widget field="PIDT D" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="1" y="51"/>
-		<height>20</height>
+		<location x="0" y="84"/>
+	</widget>
+	<widget field="PIDD P" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="63"/>
+	</widget>
+	<widget field="PIDD I" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="42"/>
+	</widget>
+	<widget field="PIDD F" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="21"/>
+	</widget>
+	<widget field="PIDD D" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="0"/>
 	</widget>
 </dashboard>
 <live-window>

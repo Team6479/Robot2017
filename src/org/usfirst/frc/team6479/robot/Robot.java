@@ -54,30 +54,21 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public class Robot extends IterativeRobot {
 	
 	//chooser for auto
-	SendableChooser<String> autoChooser = new SendableChooser<>();
-	//auto options
-	final String autoDefault = "default";
-	final String autoOne = "one";
-	final String autoTwo = "two";
+	SendableChooser<String> autoChooser;
 	//which auto is selected
 	String autoSelected;
 	
 	//chooser for tele
-	SendableChooser<String> teleChooser = new SendableChooser<>();
-	//tele options
-	final String teleArcade = "arcade";
-	final String teleRacing = "racing";
-	final String teleTank = "tank";
-	
+	SendableChooser<String> teleChooser;
 	//which tele is selected
 	String teleSelected;
 	
 	//xbox cotroller
-	XboxController xbox = new XboxController(0);
+	XboxController xbox;
 	
 	//the motor controllers for the drive train
-	Spark leftDrive = new Spark(0);
-	Spark rightDrive = new Spark(1);
+	Spark leftDrive;
+	Spark rightDrive;
 	
 	PIDController pidTurnLeftDrive;
 	PIDController pidTurnRightDrive;
@@ -93,9 +84,9 @@ public class Robot extends IterativeRobot {
 	double pidDD;
 	double pidDF;
 	
-	CustomDrive driveTrain = new CustomDrive(leftDrive, rightDrive);
+	CustomDrive driveTrain;
 	
-	Victor climber = new Victor(2);
+	Victor climber;
 	
 	//enums for left and right joystick on
 	public enum JoystickOn {
@@ -107,7 +98,7 @@ public class Robot extends IterativeRobot {
 	Encoder leftDriveEncoder;
 	Encoder rightDriveEncoder;
 
-	AnalogInput sonar;
+	RangeFinderAnalog sonar;
 	ADXRS450Gyro gyro;
 	
 	//camera thread
@@ -124,10 +115,21 @@ public class Robot extends IterativeRobot {
 		gyro = new ADXRS450Gyro();
 		gyro.startThread();
 		
-		pidTP = .05;
+		sonar = new RangeFinderAnalog(0);
+		
+		leftDrive = new Spark(0);
+		rightDrive = new Spark(1);
+		
+		driveTrain = new CustomDrive(leftDrive, rightDrive);
+		
+		xbox = new XboxController(0);
+		
+		climber = new Victor(2);
+		
+		pidTP = .02;
 		pidTI = 0;
-		pidTD = .01;
-		pidTF = 0;
+		pidTD = .02;
+		pidTF = .01;
 		SmartDashboard.putNumber("PIDT P", pidTP);
 		SmartDashboard.putNumber("PIDT I", pidTI);
 		SmartDashboard.putNumber("PIDT D", pidTD);
@@ -177,15 +179,16 @@ public class Robot extends IterativeRobot {
 			pidDriveLeftDrive.setContinuous(true);
 			pidDriveRightDrive.setContinuous(true);
 		
-		
-		autoChooser.addDefault("Default Auto", autoDefault);
-		autoChooser.addObject("First Auto", autoOne);
-		autoChooser.addObject("Second Auto", autoTwo);
+		autoChooser = new SendableChooser<>();
+		autoChooser.addDefault("First Auto", "one");
+		autoChooser.addObject("Second Auto", "two");
+		autoChooser.addObject("Third Auto", "three");
 		SmartDashboard.putData("Auto Choices", autoChooser);
 		
-		teleChooser.addDefault("Arcade Drive", teleArcade);
-		teleChooser.addObject("Racing Drive", teleRacing);
-		teleChooser.addObject("Tank Drive", teleTank);
+		teleChooser = new SendableChooser<>();
+		teleChooser.addDefault("Arcade Drive", "arcade");
+		teleChooser.addObject("Racing Drive", "racing");
+		teleChooser.addObject("Tank Drive", "tank");
 		SmartDashboard.putData("Tele Choices", teleChooser);
 		
 		
@@ -195,10 +198,9 @@ public class Robot extends IterativeRobot {
 		//left drive is inverted since both motors are built identical
 		leftDrive.setInverted(true);
 		
-		//create range finder
-		sonar = new AnalogInput(0);
-		
 		CameraServer.getInstance().startAutomaticCapture("BackView", 1);
+		
+		
 		
 		GripPipelineHSV grip = new GripPipelineHSV();
 			// Get the UsbCamera from CameraServer
@@ -290,17 +292,30 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousPeriodic() {
-		
-		rightDriveEncoder.reset();
-		leftDriveEncoder.reset();
-		while(Math.abs(rightDriveEncoder.getDistance()) <= (feetToMove * 12) &&
-					Math.abs(leftDriveEncoder.getDistance()) <= (feetToMove * 12)){
-			rightDrive.setSpeed(-0.30);
-			leftDrive.setSpeed(0.30);
-		}
-		leftDrive.setSpeed(0);
-		rightDrive.setSpeed(0);
-		
+			
+		if (turn){
+
+			//	System.out.println("X: " + centerX);
+				if(centerX > 82){
+					leftDrive.set(0.3);
+					rightDrive.set(0.3);
+					System.out.println("Turning right     X: " + centerX);
+				}else if (centerX < 78){
+					leftDrive.set(-0.3);
+					rightDrive.set(-0.3);
+					System.out.println("Turning left     X: " + centerX);
+				}else{
+					leftDrive.set(0);
+					rightDrive.set(0);
+					System.out.println("Stop       X: " + centerX);
+				}
+				
+				turn = false;
+			}
+			
+			Timer.delay(0.05);
+			leftDrive.set(0);
+			rightDrive.set(0);
 		
 	}
 
@@ -312,9 +327,8 @@ public class Robot extends IterativeRobot {
 	public void teleopInit() {
 		//get the teleop driving config
 		teleSelected = teleChooser.getSelected();
-		SmartDashboard.putString("Selected", teleSelected);
 		//if its for arcade, set right stick on
-		if(teleSelected.equals(teleArcade)) {
+		if(teleSelected.equals("arcade")) {
 			stickOn = JoystickOn.RIGHT;
 		}
 
@@ -341,15 +355,20 @@ public class Robot extends IterativeRobot {
 		angleToMove = SmartDashboard.getNumber("Angle to move", 90);
 		feetToMove = SmartDashboard.getNumber("Feet to move", 3);
 		gyro.reset();
+		
+		climbSpeed = .5;
 	}
 	double angleToMove;
 	double feetToMove;
 	/**
 	 * This function is called periodically during operator control
 	 */
-	double climbSpeed = 0.5;
+	double climbSpeed;
 	@Override
 	public void teleopPeriodic() {
+		SmartDashboard.putNumber("Voltage to target", sonar.getVoltage());
+		SmartDashboard.putNumber("Distance to target", sonar.getDistance());
+		
 		if(xbox.getAButton()){
 			turn(angleToMove);
 		}
@@ -361,32 +380,41 @@ public class Robot extends IterativeRobot {
 		
 		if (xbox.getBButton())
 		{
-			climber.set(climbSpeed);
+			climber.set(Math.abs(climbSpeed));
 		} 
 		else
 		{
 			climber.set(0);
 		}
-		
+		SmartDashboard.putNumber("Sppedd", climbSpeed);
 		if (xbox.getBumper(Hand.kRight)){
 			climbSpeed = climbSpeed + 0.25;
-		} else if (xbox.getBumper(Hand.kLeft)){
+		}
+		if (xbox.getBumper(Hand.kLeft)){
 			climbSpeed = climbSpeed - 0.25;
+		}
+		if (climbSpeed > 1)
+		{
+			climbSpeed = 0;
+		}
+		if (climbSpeed < 0)
+		{
+			climbSpeed = 1;
 		}
 		
 		//choose which teleop is selected
 		switch (teleSelected) {
-		case teleRacing:
+		case "racing":
 			//call function for racing drive
 			racing();
 			break;
-		case teleTank:
+		case "tank":
 			//calculates left side, sets left drive speed to y axis of xbox left
 			leftDrive.set(xbox.getY(Hand.kLeft) );
 			//calculates right side, sets right drive speed to y axis of xbox right
 			rightDrive.set(xbox.getY(Hand.kRight) );
 			break;
-		case teleArcade:
+		case "arcade":
 			//call the arcade function
 		default:
 			arcade();
