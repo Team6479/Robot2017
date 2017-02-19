@@ -6,9 +6,6 @@
 	<widget field="Right Encoder" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="0" y="357"/>
 	</widget>
-	<widget field="Inches to mveveve" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="336"/>
-	</widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.CameraServerViewer">
 		<location x="823" y="18"/>
 		<width>496</width>
@@ -30,29 +27,17 @@
 	<widget field="Distance to target" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="0" y="105"/>
 	</widget>
-	<widget field="Sppedd" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="84"/>
-	</widget>
 	<widget field="Auto Choices" type="String Chooser" class="edu.wpi.first.smartdashboard.gui.elements.Chooser">
 		<location x="0" y="273"/>
 	</widget>
 	<widget field="Tele Choices" type="String Chooser" class="edu.wpi.first.smartdashboard.gui.elements.Chooser">
-		<location x="15" y="246"/>
-	</widget>
-	<widget field="Feet to move" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="231"/>
-	</widget>
-	<widget field="Auto Selector" type="String" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="210"/>
+		<location x="23" y="266"/>
 	</widget>
 	<widget field="Angle to move" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="0" y="189"/>
 	</widget>
 	<widget field="PIDT P" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="246" y="63"/>
-	</widget>
-	<widget field="Selected" type="String" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="147"/>
 	</widget>
 	<widget field="PIDT I" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="246" y="89"/>
