@@ -106,6 +106,7 @@ public class Robot extends IterativeRobot {
 	
 	private double centerX = 0.0;
 	private boolean turn = false;
+	
 	/**
 	 * This function is run when the robot is first started up and should be
 	 * used for any initialization code.
@@ -149,7 +150,7 @@ public class Robot extends IterativeRobot {
 		
 			//init the encoders
 			leftDriveEncoder = new Encoder(0, 1, false, Encoder.EncodingType.k4X);
-			rightDriveEncoder = new Encoder(3, 4, true, Encoder.EncodingType.k4X);
+			rightDriveEncoder = new Encoder(2, 3, true, Encoder.EncodingType.k4X);
 			//set the time until when the robot is considered stopped, set in seconds
 			leftDriveEncoder.setMaxPeriod(.05);
 			rightDriveEncoder.setMaxPeriod(.05);
@@ -250,8 +251,11 @@ public class Robot extends IterativeRobot {
 				    }
 				    
 					if (center != null){
-						Imgproc.circle(mat, center, 5, new Scalar(255,255,255));
+		//				Imgproc.circle(mat, center, 5, new Scalar(255,255,255));
 						centerX = center.x;
+						turn = true;
+					}else if(r != null){
+						centerX = r.x + (r.width/2);
 						turn = true;
 					}
 				}
@@ -296,12 +300,14 @@ public class Robot extends IterativeRobot {
 		if (turn){
 
 			//	System.out.println("X: " + centerX);
+				
+			
 				if(centerX > 82){
-					leftDrive.set(0.3);
+					leftDrive.set(-0.3);
 					rightDrive.set(0.3);
 					System.out.println("Turning right     X: " + centerX);
 				}else if (centerX < 78){
-					leftDrive.set(-0.3);
+					leftDrive.set(0.3);
 					rightDrive.set(-0.3);
 					System.out.println("Turning left     X: " + centerX);
 				}else{
@@ -311,9 +317,13 @@ public class Robot extends IterativeRobot {
 				}
 				
 				turn = false;
+
 			}
 			
-			Timer.delay(0.05);
+			
+				
+			
+			Timer.delay(0.04);
 			leftDrive.set(0);
 			rightDrive.set(0);
 		
@@ -367,7 +377,11 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void teleopPeriodic() {
 		SmartDashboard.putNumber("Voltage to target", sonar.getVoltage());
-		SmartDashboard.putNumber("Distance to target", sonar.getDistance());
+		SmartDashboard.putNumber("Avrgae Voltage to target", sonar.getAverageVoltage());
+		SmartDashboard.putNumber("Distance to target", sonar.getDistanceInInches());
+		
+		SmartDashboard.putNumber("Right Encoder", rightDriveEncoder.getDistance());
+		SmartDashboard.putNumber("Left Encoder", leftDriveEncoder.getDistance());
 		
 		if(xbox.getAButton()){
 			turn(angleToMove);
@@ -429,9 +443,10 @@ public class Robot extends IterativeRobot {
 		double inchesToMove = feet * 12;
 		pidDriveLeftDrive.setSetpoint(-inchesToMove);
 		pidDriveRightDrive.setSetpoint(-inchesToMove);
-		pidDriveLeftDrive.enable();
-		pidDriveRightDrive.enable();
-		loop: while(true) {
+		SmartDashboard.putNumber("Inches to mveveve", inchesToMove);
+		//pidDriveLeftDrive.enable();
+		//pidDriveRightDrive.enable();
+		/*loop: while(true) {
 			if(Math.abs(rightDriveEncoder.getDistance()) >= Math.abs(inchesToMove) &&
 					Math.abs(leftDriveEncoder.getDistance()) >= Math.abs(inchesToMove))
 			{	
@@ -439,7 +454,7 @@ public class Robot extends IterativeRobot {
 				pidDriveRightDrive.disable();
 				break loop;
 			}
-		}
+		}*/
 	}
 	public void turn(double degrees){
 		gyro.reset();

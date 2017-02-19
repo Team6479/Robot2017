@@ -42,7 +42,7 @@ public class RangeFinderAnalog extends SensorBase implements PIDSource, LiveWind
   private int m_channel;
   private static final int[] kAccumulatorChannels = {0, 1};
   private long m_accumulatorOffset;
-  private double scaleFactor = 0.009766;
+  private double scaleFactor = .0009765625;
   protected PIDSourceType m_pidSource = PIDSourceType.kDisplacement;
 
   /**
@@ -108,8 +108,8 @@ public class RangeFinderAnalog extends SensorBase implements PIDSource, LiveWind
   }
 
   
-  public double getDistance() {
-	  return getVoltage() / scaleFactor;
+  public double getDistanceInInches() {
+	  return (getAverageVoltage() / scaleFactor) / 25.4;
   }
   
   /**
