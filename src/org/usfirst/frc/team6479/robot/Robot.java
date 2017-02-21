@@ -147,9 +147,9 @@ public class Robot extends IterativeRobot
 		pidDriveRightDrive.setContinuous(true);
 
 		autoChooser = new SendableChooser<>();
-		autoChooser.addDefault("First Auto", "one");
-		autoChooser.addObject("Second Auto", "two");
-		autoChooser.addObject("Third Auto", "three");
+		autoChooser.addDefault("Left Start", "left");
+		autoChooser.addObject("Center Start", "mid");
+		autoChooser.addObject("Right Start", "right");
 		SmartDashboard.putData("Auto Choices", autoChooser);
 		teleChooser = new SendableChooser<>();
 		teleChooser.addDefault("Arcade Drive", "arcade");
@@ -282,8 +282,13 @@ public class Robot extends IterativeRobot
 	{
 		SmartDashboard.putNumber("Distance to target", sonar.getDistanceInInches());
 		// TODO move into position using turn and drive methods
-	
-		//center robot on lift
+		switch(autoSelected){
+		case "left":
+			
+			
+		}
+		
+		//center robot on gear lift
 		if(turn && !forward && !atTarget)
 		{
 			System.out.println("turn");
@@ -479,7 +484,17 @@ public class Robot extends IterativeRobot
 	}
 	public void racing()
 	{
-		driveTrain.arcadeDrive(rotate(), throttle());
+		//get right and left trigger axis values
+		double left = xbox.getRawAxis(2);
+		double right = xbox.getRawAxis(3);
+		// each trigger has an axis range of 0 to 1
+		// to make left trigger reverse, subtract axis value from right trigger
+		double throttle = right - left;
+		//get left joystick x axis value
+		double x = xbox.getRawAxis(0);
+		// invert
+		double turn = x * -1;
+		driveTrain.arcadeDrive(turn, throttle);
 	}
 	public void arcade()
 	{
@@ -496,21 +511,7 @@ public class Robot extends IterativeRobot
 		if(stickOn == JoystickOn.LEFT)
 			fineDrive();
 	}
-	public double throttle()
-	{
-		double left = xbox.getRawAxis(2);
-		double right = xbox.getRawAxis(3);
-		// each trigger has an axis range of 0 to 1
-		// to make left trigger reverse, subtract axis value from right trigger
-		return right - left;
-	}
-	// this method is called when the left joystick moves horizontally
-	public double rotate()
-	{
-		double x = xbox.getRawAxis(0);
-		// invert
-		return(x * -1);
-	}
+	
 	// this function is called when the right joystick on the xbox cotroller is being used gives full control, going from -1 to 1
 	public void fullDrive()
 	{
