@@ -160,7 +160,7 @@ public class Robot extends IterativeRobot
 		SmartDashboard.putNumber("Angle to move", 90);
 		SmartDashboard.putNumber("Inches to move", 36);
 
-		CameraServer.getInstance().startAutomaticCapture("BackView", 1);
+
 		GripPipelineHSV grip = new GripPipelineHSV();
 		UsbCamera camera = CameraServer.getInstance().startAutomaticCapture("FrontView", 0);
 		camera.setResolution(640, 480);
@@ -174,7 +174,7 @@ public class Robot extends IterativeRobot
 
 			// Mats are very memory expensive. Lets reuse this Mat.
 			Mat mat = new Mat();
-			// pipe.process(mat);
+			
 			// This cannot be 'true'. The program will never exit if it is. This
 			// lets the robot stop this thread when restarting robot code or
 			// deploying.
@@ -189,15 +189,18 @@ public class Robot extends IterativeRobot
 					// skip the rest of the current iteration
 					continue;
 				}
+				
 				// process image
 				grip.process(mat);
-
+				
 				ArrayList<MatOfPoint> contours = grip.filterContoursOutput();
+				
 				Rect r = null;
 				if(contours.size() > 0)
 				{
 					r = Imgproc.boundingRect(contours.get(0));
 				}
+				
 				Rect r2 = null;
 				if(contours.size() > 1)
 				{
@@ -211,11 +214,13 @@ public class Robot extends IterativeRobot
 				}
 				if(center != null)
 				{
+			
 					centerX = center.x;
 					turn = true;
 				}
 				else if(r != null)
 				{
+		//			System.out.println("process");
 					centerX = r.x + (r.width / 2);
 					turn = true;
 				}
@@ -224,6 +229,7 @@ public class Robot extends IterativeRobot
 
 		thread.setDaemon(true);
 		thread.start();
+		CameraServer.getInstance().startAutomaticCapture("BackView", 1);
 	}
 	/**
 	 * This autonomous (along with the chooser code above) shows how to select
@@ -260,29 +266,38 @@ public class Robot extends IterativeRobot
 		pidDF = SmartDashboard.getNumber("PIDD F", pidDF);
 		pidDriveLeftDrive.setPID(pidDP, pidDI, pidDD, pidDF);
 		pidDriveRightDrive.setPID(pidDP, pidDI, pidDD, pidDF);
+	
+		forward = false;
+		atTarget = false;
 	}
 	/**
 	 * This function is called periodically during autonomous
 	 */
+	
+	private boolean forward = false;
+	private boolean atTarget = false;
+	
 	@Override
 	public void autonomousPeriodic()
 	{
-		
+		SmartDashboard.putNumber("Distance to target", sonar.getDistanceInInches());
 		// TODO move into position using turn and drive methods
-		
+	
 		//center robot on lift
-		if(turn)
+		if(turn && !forward && !atTarget)
 		{
+			System.out.println("turn");
+			
 			if(centerX > 82)
 			{
-				leftDrive.set(-0.3);
-				rightDrive.set(0.3);
+				leftDrive.set(-0.4);
+				rightDrive.set(0.4);
 				System.out.println("Turning right     X: " + centerX);
 			}
 			else if(centerX < 78)
 			{
-				leftDrive.set(0.3);
-				rightDrive.set(-0.3);
+				leftDrive.set(0.4);
+				rightDrive.set(-0.4);
 				System.out.println("Turning left     X: " + centerX);
 			}
 			else
@@ -290,17 +305,40 @@ public class Robot extends IterativeRobot
 				leftDrive.set(0);
 				rightDrive.set(0);
 				System.out.println("Stop       X: " + centerX);
+				forward = true;
+				gyro.reset();
 			}
 			turn = false;
 		}
-		Timer.delay(0.04);
+		Timer.delay(0.05);
 		leftDrive.set(0);
 		rightDrive.set(0);
 		
 		//find the distance to the target, then drive forward that amount
-
+		if (forward){
+		
+			double distance = sonar.getDistanceInInches();
+			while(isAutonomous() && distance > 15){
+				double angle = gyro.getAngle();
+				
+				driveTrain.drive(0.4, -angle*Kp);
+				Timer.delay(0.05*(distance/15));
+				driveTrain.drive(0, 0);
+				Timer.delay(0.05);
+				distance = sonar.getDistanceInInches();
+				System.out.println(distance);
+			}
+			driveTrain.drive(0, 0);
+			System.out.println("STOP");
+			forward = false;
+			atTarget = true;
+		}
+		
+		
 	}
 
+	private double Kp = 0.03;
+	
 	/**
 	 * This function is called at the start of operator control
 	 */
@@ -348,10 +386,7 @@ public class Robot extends IterativeRobot
 	@Override
 	public void teleopPeriodic()
 	{
-		SmartDashboard.putNumber("Voltage to target", sonar.getVoltage());
-		SmartDashboard.putNumber("Avrgae Voltage to target", sonar.getAverageVoltage());
 		SmartDashboard.putNumber("Distance to target", sonar.getDistanceInInches());
-
 		SmartDashboard.putNumber("Right Encoder", rightDriveEncoder.getDistance());
 		SmartDashboard.putNumber("Left Encoder", leftDriveEncoder.getDistance());
 		
