@@ -147,9 +147,9 @@ public class Robot extends IterativeRobot
 		pidDriveRightDrive.setContinuous(true);
 
 		autoChooser = new SendableChooser<>();
-		autoChooser.addDefault("First Auto", "one");
-		autoChooser.addObject("Second Auto", "two");
-		autoChooser.addObject("Third Auto", "three");
+		autoChooser.addDefault("Left Start", "left");
+		autoChooser.addObject("Center Start", "mid");
+		autoChooser.addObject("Right Start", "right");
 		SmartDashboard.putData("Auto Choices", autoChooser);
 		teleChooser = new SendableChooser<>();
 		teleChooser.addDefault("Arcade Drive", "arcade");
@@ -282,8 +282,34 @@ public class Robot extends IterativeRobot
 	{
 		SmartDashboard.putNumber("Distance to target", sonar.getDistanceInInches());
 		// TODO move into position using turn and drive methods
-	
-		//center robot on lift
+		switch(autoSelected){
+		case "left":
+			leftAuto();
+			centerDist();
+			break;
+		case "mid":
+			centerDist();
+			break;
+		case "right":
+			rightAuto();
+			centerDist();
+			break;
+		}
+	}
+	/**
+	 * This function is called at the start of operator control
+	 */
+	public void leftAuto(){
+		//move forward 1 ft
+		drive(12);
+		//turn right
+		turn(45);
+		//move forward 1 ft again
+		drive(12);
+	}
+	public void centerDist(){
+		double Kp = 0.03;
+		//center robot on target
 		if(turn && !forward && !atTarget)
 		{
 			System.out.println("turn");
@@ -334,14 +360,15 @@ public class Robot extends IterativeRobot
 			atTarget = true;
 		}
 		
-		
 	}
-
-	private double Kp = 0.03;
-	
-	/**
-	 * This function is called at the start of operator control
-	 */
+	public void rightAuto(){
+		//move forward 1 ft
+		drive(12);
+		//turn right
+		turn(-45);
+		//move forward 1 ft again
+		drive(12);
+	}
 	@Override
 	public void teleopInit()
 	{
@@ -469,7 +496,7 @@ public class Robot extends IterativeRobot
 		pidTurnRightDrive.enable();
 		loop: while(true)
 		{
-			if(Math.abs(gyro.getAngle()) >= Math.abs(degreesToMove))
+			if(Math.abs(gyro.getAngle()) >= Math.abs(degrees))
 			{
 				pidTurnLeftDrive.disable();
 				pidTurnRightDrive.disable();
@@ -479,7 +506,15 @@ public class Robot extends IterativeRobot
 	}
 	public void racing()
 	{
-		driveTrain.arcadeDrive(rotate(), throttle());
+		double left = xbox.getRawAxis(2);
+		double right = xbox.getRawAxis(3);
+		// each trigger has an axis range of 0 to 1
+		// to make left trigger reverse, subtract axis value from right trigger
+		double throttle = right - left;
+		double x = xbox.getRawAxis(0);
+		// invert
+		double rotate = (x * -1);
+		driveTrain.arcadeDrive(throttle, rotate);
 	}
 	public void arcade()
 	{
@@ -495,21 +530,6 @@ public class Robot extends IterativeRobot
 		// if the left stick is on, use fine drive
 		if(stickOn == JoystickOn.LEFT)
 			fineDrive();
-	}
-	public double throttle()
-	{
-		double left = xbox.getRawAxis(2);
-		double right = xbox.getRawAxis(3);
-		// each trigger has an axis range of 0 to 1
-		// to make left trigger reverse, subtract axis value from right trigger
-		return right - left;
-	}
-	// this method is called when the left joystick moves horizontally
-	public double rotate()
-	{
-		double x = xbox.getRawAxis(0);
-		// invert
-		return(x * -1);
 	}
 	// this function is called when the right joystick on the xbox cotroller is being used gives full control, going from -1 to 1
 	public void fullDrive()
