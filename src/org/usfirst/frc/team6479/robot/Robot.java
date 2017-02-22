@@ -37,10 +37,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  */
 public class Robot extends IterativeRobot
 {
-	SendableChooser<String> autoChooser;
+	//SendableChooser<String> autoChooser;
 	String autoSelected;
-	SendableChooser<String> teleChooser;
-	String teleSelected;
+	//SendableChooser<String> teleChooser;
+	//String teleSelected;
 	XboxController xbox;
 
 	PIDController pidTurnLeftDrive;
@@ -78,6 +78,7 @@ public class Robot extends IterativeRobot
 	Thread thread;
 	private double centerX = 0.0;
 	private boolean turn = false;
+	private boolean inGeneralPosition;
 	/**
 	 * This function is run when the robot is first started up and should be
 	 * used for any initialization code.
@@ -100,17 +101,13 @@ public class Robot extends IterativeRobot
 		pidTI = 0;
 		pidTD = .02;
 		pidTF = .01;
-		SmartDashboard.putNumber("PIDT P", pidTP);
-		SmartDashboard.putNumber("PIDT I", pidTI);
-		SmartDashboard.putNumber("PIDT D", pidTD);
-		SmartDashboard.putNumber("PIDT F", pidTF);
 		// enable PID's
 		pidTurnLeftDrive = new PIDController(pidTP, pidTI, pidTD, pidTF, gyro, leftDrive);
 		pidTurnRightDrive = new PIDController(pidTP, pidTI, pidTD, pidTF, gyro, rightDrive);
-		pidTurnLeftDrive.setInputRange(-1200, 1200);
-		pidTurnRightDrive.setInputRange(-1200, 1200);
-		pidTurnLeftDrive.setOutputRange(-1, 1);
-		pidTurnRightDrive.setOutputRange(-1, 1);
+		pidTurnLeftDrive.setInputRange(-180, 180);
+		pidTurnRightDrive.setInputRange(-180, 180);
+		pidTurnLeftDrive.setOutputRange(-.8, .8);
+		pidTurnRightDrive.setOutputRange(-.8, .8);
 		pidTurnLeftDrive.setAbsoluteTolerance(1);
 		pidTurnRightDrive.setAbsoluteTolerance(1);
 		pidTurnLeftDrive.setContinuous(true);
@@ -130,35 +127,32 @@ public class Robot extends IterativeRobot
 		pidDI = 0;
 		pidDD = 0;
 		pidDF = 0;
-		SmartDashboard.putNumber("PIDD P", pidDP);
-		SmartDashboard.putNumber("PIDD I", pidDI);
-		SmartDashboard.putNumber("PIDD D", pidDD);
-		SmartDashboard.putNumber("PIDD F", pidDF);
 		// enable PID's
 		pidDriveLeftDrive = new PIDController(pidDP, pidDI, pidDD, pidDF, leftDriveEncoder, leftDrive);
 		pidDriveRightDrive = new PIDController(pidDP, pidDI, pidDD, pidDF, rightDriveEncoder, rightDrive);
-		pidDriveLeftDrive.setInputRange(-180, 180);
-		pidDriveRightDrive.setInputRange(-180, 180);
-		pidDriveLeftDrive.setOutputRange(-1, 1);
-		pidDriveRightDrive.setOutputRange(-1, 1);
+		pidDriveLeftDrive.setInputRange(-1000, 1000);
+		pidDriveRightDrive.setInputRange(-1000, 1000);
+		pidDriveLeftDrive.setOutputRange(-.6, .6);
+		pidDriveRightDrive.setOutputRange(-.6, .6);
 		pidDriveLeftDrive.setAbsoluteTolerance(1);
 		pidDriveRightDrive.setAbsoluteTolerance(1);
 		pidDriveLeftDrive.setContinuous(true);
 		pidDriveRightDrive.setContinuous(true);
 
-		autoChooser = new SendableChooser<>();
-		autoChooser.addDefault("First Auto", "one");
-		autoChooser.addObject("Second Auto", "two");
-		autoChooser.addObject("Third Auto", "three");
+		/*autoChooser = new SendableChooser<>();
+		autoChooser.addDefault("Center Auto", "center");
+		autoChooser.addObject("Left Auto", "left");
+		autoChooser.addObject("Right Auto", "right");
 		SmartDashboard.putData("Auto Choices", autoChooser);
 		teleChooser = new SendableChooser<>();
 		teleChooser.addDefault("Arcade Drive", "arcade");
 		teleChooser.addObject("Racing Drive", "racing");
 		teleChooser.addObject("Tank Drive", "tank");
-		SmartDashboard.putData("Tele Choices", teleChooser);
+		SmartDashboard.putData("Tele Choices", teleChooser);*/
 		
-		SmartDashboard.putNumber("Angle to move", 90);
-		SmartDashboard.putNumber("Inches to move", 36);
+		SmartDashboard.putString("DB/String 0", "center");
+		driverInfo();
+		
 
 
 		GripPipelineHSV grip = new GripPipelineHSV();
@@ -231,6 +225,19 @@ public class Robot extends IterativeRobot
 		thread.start();
 		CameraServer.getInstance().startAutomaticCapture("BackView", 1);
 	}
+	
+	public void driverInfo()
+	{
+		SmartDashboard.putString("DB/String 1", "Left Speed: " + leftDrive.get());
+		SmartDashboard.putString("DB/String 2", "Right Speed: " + rightDrive.get());
+		SmartDashboard.putString("DB/String 3", "Distance To Target: " + sonar.getDistanceInInches() + " inches");
+		SmartDashboard.putString("DB/String 4", "Climber: " + climber.get());
+		SmartDashboard.putString("DB/String 5", "Left Encoder: " + leftDriveEncoder.get() + " inches");
+		SmartDashboard.putString("DB/String 6", "Right Encoder: " + rightDriveEncoder.get() + " inches");
+		SmartDashboard.putString("DB/String 7", "Gyro: " + gyro.getAngle() + " degrees");
+		
+		SmartDashboard.putBoolean("DB/LED 0", xbox.getBumper(Hand.kRight));
+	}
 	/**
 	 * This autonomous (along with the chooser code above) shows how to select
 	 * between different autonomous modes using the dashboard. The sendable
@@ -246,29 +253,24 @@ public class Robot extends IterativeRobot
 	public void autonomousInit()
 	{
 		// get the selected autonomous
-		autoSelected = autoChooser.getSelected();
+		//autoSelected = autoChooser.getSelected();
+		autoSelected = SmartDashboard.getString("DB/String 0", "center");
 
 		// reset the encoders
 		leftDriveEncoder.reset();
 		rightDriveEncoder.reset();
 		gyro.reset();
-
-		pidTP = SmartDashboard.getNumber("PIDT P", pidTP);
-		pidTI = SmartDashboard.getNumber("PIDT I", pidTI);
-		pidTD = SmartDashboard.getNumber("PIDT D", pidTD);
-		pidTF = SmartDashboard.getNumber("PIDT F", pidTF);
+		
 		pidTurnLeftDrive.setPID(pidTP, pidTI, pidTD, pidTF);
 		pidTurnRightDrive.setPID(pidTP, pidTI, pidTD, pidTF);
 
-		pidDP = SmartDashboard.getNumber("PIDD P", pidDP);
-		pidDI = SmartDashboard.getNumber("PIDD I", pidDI);
-		pidDD = SmartDashboard.getNumber("PIDD D", pidDD);
-		pidDF = SmartDashboard.getNumber("PIDD F", pidDF);
 		pidDriveLeftDrive.setPID(pidDP, pidDI, pidDD, pidDF);
 		pidDriveRightDrive.setPID(pidDP, pidDI, pidDD, pidDF);
 	
 		forward = false;
 		atTarget = false;
+		inGeneralPosition = false;
+		driverInfo();
 	}
 	/**
 	 * This function is called periodically during autonomous
@@ -280,9 +282,31 @@ public class Robot extends IterativeRobot
 	@Override
 	public void autonomousPeriodic()
 	{
-		SmartDashboard.putNumber("Distance to target", sonar.getDistanceInInches());
-		// TODO move into position using turn and drive methods
-	
+		// move into position using turn and drive methods
+		
+		switch(autoSelected)
+		{
+		case "left":
+			drive(120);
+			turn(60);
+			inGeneralPosition = true;
+			break;
+		case "right":
+			drive(120);
+			turn(-60);
+			inGeneralPosition = true;
+			break;
+		case "center":
+		default:
+			//drive forward 90 inches, lift is 114.3
+			drive(90);
+			inGeneralPosition = true;
+			break;
+		}
+		
+		//if robot has already moved into position
+		if(inGeneralPosition)
+		{
 		//center robot on lift
 		if(turn && !forward && !atTarget)
 		{
@@ -290,14 +314,14 @@ public class Robot extends IterativeRobot
 			
 			if(centerX > 82)
 			{
-				leftDrive.set(-0.4);
-				rightDrive.set(0.4);
+				leftDrive.set(-0.3);
+				rightDrive.set(0.3);
 				System.out.println("Turning right     X: " + centerX);
 			}
 			else if(centerX < 78)
 			{
-				leftDrive.set(0.4);
-				rightDrive.set(-0.4);
+				leftDrive.set(0.3);
+				rightDrive.set(-0.3);
 				System.out.println("Turning left     X: " + centerX);
 			}
 			else
@@ -321,7 +345,7 @@ public class Robot extends IterativeRobot
 			while(isAutonomous() && distance > 15){
 				double angle = gyro.getAngle();
 				
-				driveTrain.drive(0.4, -angle*Kp);
+				driveTrain.drive(0.3, -angle*Kp);
 				Timer.delay(0.05*(distance/15));
 				driveTrain.drive(0, 0);
 				Timer.delay(0.05);
@@ -333,8 +357,8 @@ public class Robot extends IterativeRobot
 			forward = false;
 			atTarget = true;
 		}
-		
-		
+		}
+		driverInfo();
 	}
 
 	private double Kp = 0.03;
@@ -346,56 +370,38 @@ public class Robot extends IterativeRobot
 	public void teleopInit()
 	{
 		// get the teleop driving config
-		teleSelected = teleChooser.getSelected();
+		//teleSelected = teleChooser.getSelected();
 		// if its for arcade, set right stick on
-		if(teleSelected.equals("arcade"))
+		/*if(teleSelected.equals("arcade"))
 		{
 			stickOn = JoystickOn.RIGHT;
-		}
+		}*/
 
 		// reset the encoders
 		leftDriveEncoder.reset();
 		rightDriveEncoder.reset();
 		gyro.reset();
 
-		pidTP = SmartDashboard.getNumber("PIDT P", pidTP);
-		pidTI = SmartDashboard.getNumber("PIDT I", pidTI);
-		pidTD = SmartDashboard.getNumber("PIDT D", pidTD);
-		pidTF = SmartDashboard.getNumber("PIDT F", pidTF);
-		pidTurnLeftDrive.setPID(pidTP, pidTI, pidTD, pidTF);
-		pidTurnRightDrive.setPID(pidTP, pidTI, pidTD, pidTF);
+		//pidTurnLeftDrive.setPID(pidTP, pidTI, pidTD, pidTF);
+		//pidTurnRightDrive.setPID(pidTP, pidTI, pidTD, pidTF);
 
-		pidDP = SmartDashboard.getNumber("PIDD P", pidDP);
-		pidDI = SmartDashboard.getNumber("PIDD I", pidDI);
-		pidDD = SmartDashboard.getNumber("PIDD D", pidDD);
-		pidDF = SmartDashboard.getNumber("PIDD F", pidDF);
-		pidDriveLeftDrive.setPID(pidDP, pidDI, pidDD, pidDF);
-		pidDriveRightDrive.setPID(pidDP, pidDI, pidDD, pidDF);
+		//pidDriveLeftDrive.setPID(pidDP, pidDI, pidDD, pidDF);
+		//pidDriveRightDrive.setPID(pidDP, pidDI, pidDD, pidDF);
 
-		angleToMove = SmartDashboard.getNumber("Angle to move", 90);
-		inchesToMove = SmartDashboard.getNumber("Inches to move", 36);
-
-		climbSpeed = .5;
+		//climbSpeed = .5;
+		driverInfo();
 	}
-	double angleToMove;
-	double inchesToMove;
+	//double angleToMove;
+	//double inchesToMove;
 	/**
 	 * This function is called periodically during operator control
 	 */
-	double climbSpeed;
+	//double climbSpeed;
 	@Override
 	public void teleopPeriodic()
 	{
-		SmartDashboard.putNumber("Distance to target", sonar.getDistanceInInches());
-		SmartDashboard.putNumber("Right Encoder", rightDriveEncoder.getDistance());
-		SmartDashboard.putNumber("Left Encoder", leftDriveEncoder.getDistance());
 		
-		if(xbox.getYButton())
-		{
-			drive(inchesToMove);
-		}
-
-		if(xbox.getBButton())
+		/*if(xbox.getBButton())
 		{
 			climber.set(Math.abs(climbSpeed));
 		}
@@ -419,10 +425,10 @@ public class Robot extends IterativeRobot
 		if(climbSpeed < 0)
 		{
 			climbSpeed = 1;
-		}
+		}*/
 
 		// choose which teleop is selected
-		switch(teleSelected)
+		/*switch(teleSelected)
 		{
 		case "racing":
 			racing();
@@ -437,7 +443,17 @@ public class Robot extends IterativeRobot
 		default:
 			arcade();
 			break;
+		}*/
+		if(xbox.getBumper(Hand.kRight))
+		{
+			climber.set(Math.abs(xbox.getY(Hand.kRight)));
 		}
+		else
+		{
+			climber.set(0);
+		}
+		racing();
+		driverInfo();
 	}
 	public void drive(double inches)
 	{
