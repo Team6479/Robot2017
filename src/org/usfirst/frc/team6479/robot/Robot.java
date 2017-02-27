@@ -495,7 +495,17 @@ public class Robot extends IterativeRobot
 	}
 	public void racing()
 	{
-		driveTrain.arcadeDrive(rotate(), throttle());
+		double left = xbox.getRawAxis(2);
+		double right = xbox.getRawAxis(3);
+		// each trigger has an axis range of 0 to 1
+		// to make left trigger reverse, subtract axis value from right trigger
+		double throttle = right - left;
+		double turn = xbox.getRawAxis(0) * -1;
+		// invert
+		if(throttle < 0){
+			turn=turn*-1;
+		}
+		driveTrain.arcadeDrive(turn, throttle);
 	}
 	public void arcade()
 	{
@@ -511,21 +521,6 @@ public class Robot extends IterativeRobot
 		// if the left stick is on, use fine drive
 		if(stickOn == JoystickOn.LEFT)
 			fineDrive();
-	}
-	public double throttle()
-	{
-		double left = xbox.getRawAxis(2);
-		double right = xbox.getRawAxis(3);
-		// each trigger has an axis range of 0 to 1
-		// to make left trigger reverse, subtract axis value from right trigger
-		return right - left;
-	}
-	// this method is called when the left joystick moves horizontally
-	public double rotate()
-	{
-		double x = xbox.getRawAxis(0);
-		// invert
-		return(x * -1);
 	}
 	// this function is called when the right joystick on the xbox cotroller is being used gives full control, going from -1 to 1
 	public void fullDrive()
