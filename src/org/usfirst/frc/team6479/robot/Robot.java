@@ -228,13 +228,29 @@ public class Robot extends IterativeRobot
 	
 	public void driverInfo()
 	{
-		SmartDashboard.putString("DB/String 1", "Left Speed: " + leftDrive.get());
-		SmartDashboard.putString("DB/String 2", "Right Speed: " + rightDrive.get());
-		SmartDashboard.putString("DB/String 3", "Distance To Target: " + sonar.getDistanceInInches() + " inches");
-		SmartDashboard.putString("DB/String 4", "Climber: " + climber.get());
-		SmartDashboard.putString("DB/String 5", "Left Encoder: " + leftDriveEncoder.get() + " inches");
-		SmartDashboard.putString("DB/String 6", "Right Encoder: " + rightDriveEncoder.get() + " inches");
-		SmartDashboard.putString("DB/String 7", "Gyro: " + gyro.getAngle() + " degrees");
+		double preRound;
+		preRound = Math.round((leftDrive.get() * 1000));
+		double leftSpeed = (preRound / 1000);
+		preRound = Math.round((rightDrive.get() * 1000));
+		double rightSpeed = (preRound / 1000);
+		preRound = Math.round((sonar.getDistanceInInches() * 1000));
+		double distance = (preRound / 1000);
+		preRound = Math.round((climber.get() * 1000));
+		double climberSpeed = (preRound / 1000);
+		preRound = Math.round((leftDriveEncoder.getDistance() * 1000));
+		double leftEncoder = (preRound / 1000);
+		preRound = Math.round((rightDriveEncoder.getDistance() * 1000));
+		double rightEncoder = (preRound / 1000);
+		preRound = Math.round((gyro.getAngle() * 1000));
+		double gyroAngle = (preRound / 1000);
+		
+		SmartDashboard.putString("DB/String 1", "L Speed: " + leftSpeed);
+		SmartDashboard.putString("DB/String 2", "R Speed: " + rightSpeed);
+		SmartDashboard.putString("DB/String 3", "Distance: " + distance + " inches");
+		SmartDashboard.putString("DB/String 4", "Climber: " + climberSpeed);
+		SmartDashboard.putString("DB/String 5", "L Encoder: " + leftEncoder + " inches");
+		SmartDashboard.putString("DB/String 6", "R Encoder: " + rightEncoder + " inches");
+		SmartDashboard.putString("DB/String 7", "Gyro: " + gyroAngle + " degrees");
 		
 		SmartDashboard.putBoolean("DB/LED 0", xbox.getBumper(Hand.kRight));
 	}
