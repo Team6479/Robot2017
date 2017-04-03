@@ -49,9 +49,9 @@ public class GripPipelineHSV {
 
 		// Step HSV_Threshold0:
 		Mat hsvThresholdInput = cvResizeOutput;
-		double[] hsvThresholdHue = {0.0, 120.1023890784983};
-		double[] hsvThresholdSaturation = {0.0, 2.6109215017064953};
-		double[] hsvThresholdValue = {235.27877697841728, 255.0};
+		double[] hsvThresholdHue = {51.798561151079134, 80.17064846416382};
+		double[] hsvThresholdSaturation = {167.40107913669067, 233.24232081911265};
+		double[] hsvThresholdValue = {86.22302158273382, 255.0};
 		hsvThreshold(hsvThresholdInput, hsvThresholdHue, hsvThresholdSaturation, hsvThresholdValue, hsvThresholdOutput);
 
 		// Step Find_Contours0:
@@ -67,7 +67,7 @@ public class GripPipelineHSV {
 		double filterContoursMaxWidth = 1000.0;
 		double filterContoursMinHeight = 5.0;
 		double filterContoursMaxHeight = 1000.0;
-		double[] filterContoursSolidity = {0, 100};
+		double[] filterContoursSolidity = {0, 100.0};
 		double filterContoursMaxVertices = 1000000.0;
 		double filterContoursMinVertices = 0.0;
 		double filterContoursMinRatio = 0.0;

@@ -83,6 +83,7 @@ public class Robot extends IterativeRobot
 	 * This function is run when the robot is first started up and should be
 	 * used for any initialization code.
 	 */
+	private int driverCounter;
 	@Override
 	public void robotInit()
 	{
@@ -152,6 +153,7 @@ public class Robot extends IterativeRobot
 		
 		SmartDashboard.putString("DB/String 0", "center");
 		driverInfo();
+		driverCounter = 0;
 		
 
 
@@ -287,6 +289,7 @@ public class Robot extends IterativeRobot
 		atTarget = false;
 		inGeneralPosition = false;
 		driverInfo();
+		driverCounter = 0;
 	}
 	/**
 	 * This function is called periodically during autonomous
@@ -374,7 +377,12 @@ public class Robot extends IterativeRobot
 			atTarget = true;
 		}
 		}
-		driverInfo();
+		driverCounter++;
+		if (driverCounter == 3)
+		{
+			driverInfo();
+			driverCounter = 0;
+		}
 	}
 
 	private double Kp = 0.03;
@@ -406,6 +414,7 @@ public class Robot extends IterativeRobot
 
 		//climbSpeed = .5;
 		driverInfo();
+		driverCounter = 0;
 	}
 	//double angleToMove;
 	//double inchesToMove;
@@ -469,7 +478,12 @@ public class Robot extends IterativeRobot
 			climber.set(0);
 		}
 		racing();
-		driverInfo();
+		driverCounter++;
+		if (driverCounter == 3)
+		{
+			driverInfo();
+			driverCounter = 0;
+		}
 	}
 	public void drive(double inches)
 	{
