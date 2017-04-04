@@ -373,8 +373,8 @@ public class Robot extends IterativeRobot
 	public void teleopInit()
 	{
 		//Kill the camera thread to improve performace
-		try { thread.wait();}
-		catch(InterruptedException e){e.printStackTrace();}
+		/*try { thread.wait();}
+		catch(InterruptedException e){e.printStackTrace();}*/
 		
 		// get the teleop driving config
 		//teleSelected = teleChooser.getSelected();
@@ -515,9 +515,9 @@ public class Robot extends IterativeRobot
 		double throttle = right - left;
 		double turn = xbox.getRawAxis(0) * -1;
 		// invert
-		if(throttle < 0){
+		/*if(throttle < 0){
 			turn=turn*-1;
-		}
+		}*/
 		driveTrain.arcadeDrive(turn, throttle);
 	}
 	public void arcade()
