@@ -23,11 +23,6 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-/* TODO
- * Autnomous
- * Custom Dashboard
- */
-
 /**
  * The VM is configured to automatically run this class, and to call the
  * functions corresponding to each mode, as described in the IterativeRobot
@@ -230,29 +225,13 @@ public class Robot extends IterativeRobot
 	
 	public void driverInfo()
 	{
-		double preRound;
-		preRound = Math.round((leftDrive.get() * 1000));
-		double leftSpeed = (preRound / 1000);
-		preRound = Math.round((rightDrive.get() * 1000));
-		double rightSpeed = (preRound / 1000);
-		preRound = Math.round((sonar.getDistanceInInches() * 1000));
-		double distance = (preRound / 1000);
-		preRound = Math.round((climber.get() * 1000));
-		double climberSpeed = (preRound / 1000);
-		preRound = Math.round((leftDriveEncoder.getDistance() * 1000));
-		double leftEncoder = (preRound / 1000);
-		preRound = Math.round((rightDriveEncoder.getDistance() * 1000));
-		double rightEncoder = (preRound / 1000);
-		preRound = Math.round((gyro.getAngle() * 1000));
-		double gyroAngle = (preRound / 1000);
-		
-		SmartDashboard.putString("DB/String 1", "L Speed: " + leftSpeed);
-		SmartDashboard.putString("DB/String 2", "R Speed: " + rightSpeed);
-		SmartDashboard.putString("DB/String 3", "Distance: " + distance + " inches");
-		SmartDashboard.putString("DB/String 4", "Climber: " + climberSpeed);
-		SmartDashboard.putString("DB/String 5", "L Encoder: " + leftEncoder + " inches");
-		SmartDashboard.putString("DB/String 6", "R Encoder: " + rightEncoder + " inches");
-		SmartDashboard.putString("DB/String 7", "Gyro: " + gyroAngle + " degrees");
+		SmartDashboard.putString("DB/String 1", String.format("L Speed: %.3f", leftDrive.get()));
+		SmartDashboard.putString("DB/String 2", String.format("R Speed: %.3f", rightDrive.get()));
+		SmartDashboard.putString("DB/String 3", String.format("Distance: %.3f\"", sonar.getDistanceInInches()));
+		SmartDashboard.putString("DB/String 4", String.format("Climber: %.3f", climber.get()));
+		SmartDashboard.putString("DB/String 5", String.format("L Encoder: %.3f\"", leftDriveEncoder.getDistance()));
+		SmartDashboard.putString("DB/String 6", String.format("L=R Encoder: %.3f\"", rightDriveEncoder.getDistance()));
+		SmartDashboard.putString("DB/String 7", String.format("Gyro: %.3f", gyro.getAngle()));
 		
 		SmartDashboard.putBoolean("DB/LED 0", xbox.getBumper(Hand.kRight));
 	}
@@ -393,6 +372,10 @@ public class Robot extends IterativeRobot
 	@Override
 	public void teleopInit()
 	{
+		//Kill the camera thread to improve performace
+		try { thread.wait();}
+		catch(InterruptedException e){e.printStackTrace();}
+		
 		// get the teleop driving config
 		//teleSelected = teleChooser.getSelected();
 		// if its for arcade, set right stick on
