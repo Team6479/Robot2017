@@ -94,7 +94,7 @@ public class RangeFinderAnalog extends SensorBase implements PIDSource, LiveWind
    * @return A sample from the oversample and average engine for this channel.
    */
   public int getAverageValue() {
-    return AnalogJNI.getAnalogAverageValue(m_port);
+	  return AnalogJNI.getAnalogAverageValue(m_port);
   }
 
   /**
@@ -109,7 +109,12 @@ public class RangeFinderAnalog extends SensorBase implements PIDSource, LiveWind
 
   
   public double getDistanceInInches() {
-	  return (getAverageVoltage() / scaleFactor) / 25.4;
+	//  System.out.println((getAverageVoltage()*1000) / 9.766);
+	  //return (getAverageVoltage() / scaleFactor) / 25.4;
+		double valueToInches = 1/20.5;
+		double distanceX = getAverageValue();
+		double distance = (distanceX-237)*valueToInches + 12;
+		return distance;
   }
   
   /**
@@ -122,7 +127,8 @@ public class RangeFinderAnalog extends SensorBase implements PIDSource, LiveWind
    * @return A scaled sample from the output of the oversample and average engine for this channel.
    */
   public double getAverageVoltage() {
-    return AnalogJNI.getAnalogAverageVoltage(m_port);
+	//  System.out.println(AnalogJNI.getAnalogAverageVoltage(m_port));
+	  return AnalogJNI.getAnalogAverageVoltage(m_port);
   }
 
   /**

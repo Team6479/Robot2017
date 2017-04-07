@@ -37,7 +37,8 @@ public class Robot extends IterativeRobot
 	//SendableChooser<String> teleChooser;
 	//String teleSelected;
 	XboxController xbox;
-
+	
+	//initializes proportional integral derivative controls
 	PIDController pidTurnLeftDrive;
 	PIDController pidTurnRightDrive;
 	double pidTP;
@@ -64,16 +65,22 @@ public class Robot extends IterativeRobot
 	}
 	// which stick is on
 	JoystickOn stickOn;
-
+	
+	//init encoders
 	Encoder leftDriveEncoder;
 	Encoder rightDriveEncoder;
+	//init sonar
 	RangeFinderAnalog sonar;
+	
+	//init gyro
 	ADXRS450Gyro gyro;
+	
 	// camera thread
 	Thread thread;
 	private double centerX = 0.0;
 	private boolean turn = false;
 	private boolean inGeneralPosition;
+	private boolean stopCamera;
 	/**
 	 * This function is run when the robot is first started up and should be
 	 * used for any initialization code.
@@ -82,17 +89,25 @@ public class Robot extends IterativeRobot
 	@Override
 	public void robotInit()
 	{
+		stopCamera = false;
+		
 		gyro = new ADXRS450Gyro();
 		gyro.startThread();
+
 		sonar = new RangeFinderAnalog(0);
+		
 		leftDrive = new Spark(0);
 		rightDrive = new Spark(1);
+		
 		// left drive is inverted since both motors are built identical
 		leftDrive.setInverted(true);
 		driveTrain = new CustomDrive(leftDrive, rightDrive);
+		
 		xbox = new XboxController(0);
+		
 		climber = new Victor(2);
 
+		//pid tuning
 		pidTP = .02;
 		pidTI = 0;
 		pidTD = .02;
@@ -102,16 +117,16 @@ public class Robot extends IterativeRobot
 		pidTurnRightDrive = new PIDController(pidTP, pidTI, pidTD, pidTF, gyro, rightDrive);
 		pidTurnLeftDrive.setInputRange(-180, 180);
 		pidTurnRightDrive.setInputRange(-180, 180);
-		pidTurnLeftDrive.setOutputRange(-.8, .8);
-		pidTurnRightDrive.setOutputRange(-.8, .8);
+		pidTurnLeftDrive.setOutputRange(-.5, .5);
+		pidTurnRightDrive.setOutputRange(-.5, .5);
 		pidTurnLeftDrive.setAbsoluteTolerance(1);
 		pidTurnRightDrive.setAbsoluteTolerance(1);
 		pidTurnLeftDrive.setContinuous(true);
 		pidTurnRightDrive.setContinuous(true);
 
 		// init the encoders
-		leftDriveEncoder = new Encoder(0, 1, false, Encoder.EncodingType.k4X);
-		rightDriveEncoder = new Encoder(2, 3, true, Encoder.EncodingType.k4X);
+		leftDriveEncoder = new Encoder(1, 2, false, Encoder.EncodingType.k4X);
+		rightDriveEncoder = new Encoder(3, 4, true, Encoder.EncodingType.k4X);
 		// set the time until when the robot is considered stopped, set in seconds
 		leftDriveEncoder.setMaxPeriod(.05);
 		rightDriveEncoder.setMaxPeriod(.05);
@@ -128,8 +143,8 @@ public class Robot extends IterativeRobot
 		pidDriveRightDrive = new PIDController(pidDP, pidDI, pidDD, pidDF, rightDriveEncoder, rightDrive);
 		pidDriveLeftDrive.setInputRange(-1000, 1000);
 		pidDriveRightDrive.setInputRange(-1000, 1000);
-		pidDriveLeftDrive.setOutputRange(-.6, .6);
-		pidDriveRightDrive.setOutputRange(-.6, .6);
+		pidDriveLeftDrive.setOutputRange(-.4, .4);
+		pidDriveRightDrive.setOutputRange(-.4, .4);
 		pidDriveLeftDrive.setAbsoluteTolerance(1);
 		pidDriveRightDrive.setAbsoluteTolerance(1);
 		pidDriveLeftDrive.setContinuous(true);
@@ -154,10 +169,11 @@ public class Robot extends IterativeRobot
 
 		GripPipelineHSV grip = new GripPipelineHSV();
 		UsbCamera camera = CameraServer.getInstance().startAutomaticCapture("FrontView", 0);
-		camera.setResolution(640, 480);
+		camera.setResolution(320, 240);
 
 		thread = new Thread(() ->
 		{
+			if(!stopCamera) {
 			// Get a CvSink. This will capture Mats from the camera
 			CvSink cvSink = CameraServer.getInstance().getVideo();
 			// Setup a CvSource. This will send images back to the Dashboard
@@ -216,11 +232,12 @@ public class Robot extends IterativeRobot
 					turn = true;
 				}
 			}
+			}
 		});
 
 		thread.setDaemon(true);
 		thread.start();
-		CameraServer.getInstance().startAutomaticCapture("BackView", 1);
+		//CameraServer.getInstance().startAutomaticCapture("BackView", 1);
 	}
 	
 	public void driverInfo()
@@ -230,7 +247,7 @@ public class Robot extends IterativeRobot
 		SmartDashboard.putString("DB/String 3", String.format("Distance: %.3f\"", sonar.getDistanceInInches()));
 		SmartDashboard.putString("DB/String 4", String.format("Climber: %.3f", climber.get()));
 		SmartDashboard.putString("DB/String 5", String.format("L Encoder: %.3f\"", leftDriveEncoder.getDistance()));
-		SmartDashboard.putString("DB/String 6", String.format("L=R Encoder: %.3f\"", rightDriveEncoder.getDistance()));
+		SmartDashboard.putString("DB/String 6", String.format("R Encoder: %.3f\"", rightDriveEncoder.getDistance()));
 		SmartDashboard.putString("DB/String 7", String.format("Gyro: %.3f", gyro.getAngle()));
 		
 		SmartDashboard.putBoolean("DB/LED 0", xbox.getBumper(Hand.kRight));
@@ -264,11 +281,18 @@ public class Robot extends IterativeRobot
 		pidDriveLeftDrive.setPID(pidDP, pidDI, pidDD, pidDF);
 		pidDriveRightDrive.setPID(pidDP, pidDI, pidDD, pidDF);
 	
+		
+		startDrive = true;
+		startTurn = false;
+		stopTurn = false;
 		forward = false;
 		atTarget = false;
 		inGeneralPosition = false;
+		
 		driverInfo();
 		driverCounter = 0;
+		
+		stopCamera = false;
 	}
 	/**
 	 * This function is called periodically during autonomous
@@ -285,21 +309,30 @@ public class Robot extends IterativeRobot
 		switch(autoSelected)
 		{
 		case "left":
-			drive(120);
+			drive(111);
 			turn(60);
-			inGeneralPosition = true;
 			break;
 		case "right":
-			drive(120);
+			drive(111);
 			turn(-60);
-			inGeneralPosition = true;
 			break;
 		case "center":
 		default:
-			//drive forward 90 inches, lift is 114.3
-			drive(90);
-			inGeneralPosition = true;
-			break;
+			//drive forward onto lift inches, lift is 111
+			drive(75.5);
+			//drive(30);
+			turn(0);
+			/*double distance =20;
+			while(isAutonomous() && distance > 15){
+				double angle = gyro.getAngle();
+				
+				driveTrain.drive(0.3, -angle*Kp);
+				Timer.delay(0.05*(distance/15));
+				driveTrain.drive(0, 0);
+				Timer.delay(0.05);
+				System.out.println(distance);
+			}
+			driveTrain.drive(0, 0);*/
 		}
 		
 		//if robot has already moved into position
@@ -373,6 +406,7 @@ public class Robot extends IterativeRobot
 	public void teleopInit()
 	{
 		//Kill the camera thread to improve performace
+		stopCamera = true;
 		/*try { thread.wait();}
 		catch(InterruptedException e){e.printStackTrace();}*/
 		
@@ -389,12 +423,6 @@ public class Robot extends IterativeRobot
 		rightDriveEncoder.reset();
 		gyro.reset();
 
-		//pidTurnLeftDrive.setPID(pidTP, pidTI, pidTD, pidTF);
-		//pidTurnRightDrive.setPID(pidTP, pidTI, pidTD, pidTF);
-
-		//pidDriveLeftDrive.setPID(pidDP, pidDI, pidDD, pidDF);
-		//pidDriveRightDrive.setPID(pidDP, pidDI, pidDD, pidDF);
-
 		//climbSpeed = .5;
 		driverInfo();
 		driverCounter = 0;
@@ -408,50 +436,6 @@ public class Robot extends IterativeRobot
 	@Override
 	public void teleopPeriodic()
 	{
-		
-		/*if(xbox.getBButton())
-		{
-			climber.set(Math.abs(climbSpeed));
-		}
-		else
-		{
-			climber.set(0);
-		}
-		SmartDashboard.putNumber("Climber Speed", climbSpeed);
-		if(xbox.getBumper(Hand.kRight))
-		{
-			climbSpeed = climbSpeed + 0.25;
-		}
-		if(xbox.getBumper(Hand.kLeft))
-		{
-			climbSpeed = climbSpeed - 0.25;
-		}
-		if(climbSpeed > 1)
-		{
-			climbSpeed = 0;
-		}
-		if(climbSpeed < 0)
-		{
-			climbSpeed = 1;
-		}*/
-
-		// choose which teleop is selected
-		/*switch(teleSelected)
-		{
-		case "racing":
-			racing();
-			break;
-		case "tank":
-			// calculates left side, sets left drive speed to y axis of xbox left stick
-			leftDrive.set(xbox.getY(Hand.kLeft));
-			// calculates right side, sets right drive speed to y axis of xbox right stick
-			rightDrive.set(xbox.getY(Hand.kRight));
-			break;
-		case "arcade":
-		default:
-			arcade();
-			break;
-		}*/
 		if(xbox.getBumper(Hand.kRight))
 		{
 			climber.set(Math.abs(xbox.getY(Hand.kRight)));
@@ -468,43 +452,60 @@ public class Robot extends IterativeRobot
 			driverCounter = 0;
 		}
 	}
+	private boolean startDrive;
 	public void drive(double inches)
 	{
+		if (startDrive)
+		{
 		leftDriveEncoder.reset();
 		rightDriveEncoder.reset();
 		pidDriveLeftDrive.setSetpoint(-inches);
 		pidDriveRightDrive.setSetpoint(-inches);
 		pidDriveLeftDrive.enable();
 		pidDriveRightDrive.enable();
-		loop: while(true) 
-		{
-			if(Math.abs(rightDriveEncoder.getDistance()) >= Math.abs(inches) && 
+		startDrive = false;
+		}
+		//loop: while(this.isAutonomous()) 
+		//{
+			if(Math.abs(rightDriveEncoder.getDistance()) >= Math.abs(inches) || 
 					Math.abs(leftDriveEncoder.getDistance()) >= Math.abs(inches))
 			{
 				pidDriveLeftDrive.disable();
 				pidDriveRightDrive.disable(); 
-				break loop; 
+				//when this is done start turn
+				startTurn = true;
+				//break loop; 
 			}
-		}
+		//}
 	}
+	private boolean startTurn;
+	private boolean stopTurn;
 	public void turn(double degrees)
 	{
-		gyro.reset();
 		// half the degrees
 		double degreesToMove = degrees / 2;
+		
+		if (startTurn) {
+			
+		gyro.reset();
 		pidTurnLeftDrive.setSetpoint(degreesToMove);
 		pidTurnRightDrive.setSetpoint(-degreesToMove);
 		pidTurnLeftDrive.enable();
 		pidTurnRightDrive.enable();
-		loop: while(true)
-		{
-			if(Math.abs(gyro.getAngle()) >= Math.abs(degreesToMove))
+		startTurn = false;
+		stopTurn = true;
+		}
+		//loop: while(isAutonomous())
+		//{
+			if(Math.abs(gyro.getAngle()) >= Math.abs(degreesToMove) && stopTurn)
 			{
 				pidTurnLeftDrive.disable();
 				pidTurnRightDrive.disable();
-				break loop;
+				//when done, prepare to go to vision targeting
+				inGeneralPosition = true;
+			//	break loop;
 			}
-		}
+		//}
 	}
 	public void racing()
 	{
@@ -520,6 +521,42 @@ public class Robot extends IterativeRobot
 		}*/
 		driveTrain.arcadeDrive(turn, throttle);
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	public void arcade()
 	{
 		// if the right stick is on and the leftstick is clicked switch which stick is on to left stick
@@ -540,6 +577,7 @@ public class Robot extends IterativeRobot
 	{
 		// get x and y
 		double x = xbox.getRawAxis(4);
+		
 		double y = xbox.getRawAxis(5);
 		// invert
 		driveTrain.arcadeDrive(x * -1, y * -1, true);
