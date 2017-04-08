@@ -305,6 +305,7 @@ public class ADXRS450Gyro implements PIDSource {
 		//	currentRate = 0;
 
 		angle += (currentRate - driftRate) * deltaTime;
+		Robot.gyroUpdate = true;
 		/*
 		 * Periodically update our drift rate by normalizing out drift
 		 * while the robot is not moving.

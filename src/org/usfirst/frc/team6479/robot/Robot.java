@@ -57,6 +57,9 @@ public class Robot extends IterativeRobot
 	Spark rightDrive;
 	CustomDrive driveTrain;
 	Victor climber;
+	
+	//timer for uto
+	Timer timer;
 
 	// enums for left and right joystick on
 	public enum JoystickOn
@@ -89,6 +92,7 @@ public class Robot extends IterativeRobot
 	@Override
 	public void robotInit()
 	{
+		timer = new Timer();
 		stopCamera = false;
 		
 		gyro = new ADXRS450Gyro();
@@ -308,20 +312,32 @@ public class Robot extends IterativeRobot
 		
 		switch(autoSelected)
 		{
+		case "forward":
+			
+			// Drive for 2 seconds
+			if (timer.get() < 5.0) {
+				driveTrain.drive(.3, 0.0); // drive forwards half speed
+			} else {
+				driveTrain.drive(0.0, 0.0); // stop robot
+			}
+		break;
 		case "left":
 			drive(111);
-			turn(60);
+			//turn(60);
+			turn(60, 1);
 			break;
 		case "right":
 			drive(111);
-			turn(-60);
+			//turn(-60);
+			turn(60, -1);
 			break;
 		case "center":
 		default:
 			//drive forward onto lift inches, lift is 111
-			drive(75.5);
+			//drive(74.5);
+			driveGyro(73);
 			//drive(30);
-			turn(0);
+			//turn(0);
 			/*double distance =20;
 			while(isAutonomous() && distance > 15){
 				double angle = gyro.getAngle();
@@ -478,9 +494,29 @@ public class Robot extends IterativeRobot
 			}
 		//}
 	}
+	
+	public void driveGyro(double inches)
+	{
+		if (startDrive)
+		{
+			while(isAutonomous() && (Math.abs(rightDriveEncoder.getDistance()) < Math.abs(inches) || 
+					Math.abs(leftDriveEncoder.getDistance()) < Math.abs(inches))){
+				double angle = gyro.getAngle();
+				
+				driveTrain.drive(0.4, -angle*0.03);
+				Timer.delay(0.05);
+				driveTrain.drive(0, 0);
+				Timer.delay(0.05);
+			//	distance = sonar.getDistanceInInches();
+			//System.out.println(distance);
+			}
+			driveTrain.drive(0, 0);
+				startTurn = true;
+		}
+	}
 	private boolean startTurn;
 	private boolean stopTurn;
-	public void turn(double degrees)
+	/*public void turn(double degrees)
 	{
 		// half the degrees
 		double degreesToMove = degrees / 2;
@@ -506,7 +542,49 @@ public class Robot extends IterativeRobot
 			//	break loop;
 			}
 		//}
+	}*/
+	public static boolean gyroUpdate = false;
+	public void turn(double degrees, int direction){
+		
+		if(startTurn)
+		{
+		
+		double angle = Math.abs(gyro.getAngle());
+		System.out.println("Before Angle: " + angle);
+	
+		
+		while (angle < degrees-4 && isAutonomous()){
+			Timer.delay(0.004);
+			if (gyroUpdate){
+				angle = Math.abs(gyro.getAngle());
+				
+				System.out.println("Angle: " + angle);
+				leftDrive.set(0.4*direction);
+				rightDrive.set(0.4*direction);
+			
+				//comment this out if you want to try a different equation don't change this
+			//	Timer.delay(0.5*(degrees-angle)/degrees + 0.001);
+				if((0.5*(degrees-angle)/degrees + 0.001) <= 0){
+					Timer.delay(0);
+				}else{
+					Timer.delay(0.3*(degrees-angle)/degrees + 0.001);
+				}
+				
+				leftDrive.set(0);
+				rightDrive.set(0);
+				gyroUpdate = false;
+				Timer.delay(0.03);
+			
+			}
+		}
+		leftDrive.set(0);
+		rightDrive.set(0);
+		System.out.println("Immediate Angle: " + gyro.getAngle());
+		Timer.delay(5);
+		System.out.println("After Angle: " + gyro.getAngle());
+		}
 	}
+	
 	public void racing()
 	{
 		double left = xbox.getRawAxis(2);
