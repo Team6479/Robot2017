@@ -73,17 +73,17 @@ public class Robot extends IterativeRobot
 	Encoder leftDriveEncoder;
 	Encoder rightDriveEncoder;
 	//init sonar
-	RangeFinderAnalog sonar;
+	//RangeFinderAnalog sonar;
 	
 	//init gyro
 	ADXRS450Gyro gyro;
 	
 	// camera thread
-	Thread thread;
+	//Thread thread;
 	private double centerX = 0.0;
 	private boolean turn = false;
 	private boolean inGeneralPosition;
-	private boolean stopCamera;
+	//private boolean stopCamera;
 	/**
 	 * This function is run when the robot is first started up and should be
 	 * used for any initialization code.
@@ -93,12 +93,12 @@ public class Robot extends IterativeRobot
 	public void robotInit()
 	{
 		timer = new Timer();
-		stopCamera = false;
+		//stopCamera = false;
 		
 		gyro = new ADXRS450Gyro();
 		gyro.startThread();
 
-		sonar = new RangeFinderAnalog(0);
+		//sonar = new RangeFinderAnalog(0);
 		
 		leftDrive = new Spark(0);
 		rightDrive = new Spark(1);
@@ -165,17 +165,17 @@ public class Robot extends IterativeRobot
 		teleChooser.addObject("Tank Drive", "tank");
 		SmartDashboard.putData("Tele Choices", teleChooser);*/
 		
-		SmartDashboard.putString("DB/String 0", "center");
+		SmartDashboard.putString("DB/String 0", "right");
 		driverInfo();
 		driverCounter = 0;
 		
 
 
-		GripPipelineHSV grip = new GripPipelineHSV();
-		UsbCamera camera = CameraServer.getInstance().startAutomaticCapture("FrontView", 0);
-		camera.setResolution(320, 240);
+		//GripPipelineHSV grip = new GripPipelineHSV();
+		//UsbCamera camera = CameraServer.getInstance().startAutomaticCapture("FrontView", 0);
+		//camera.setResolution(320, 240);
 
-		thread = new Thread(() ->
+		/*thread = new Thread(() ->
 		{
 			if(!stopCamera) {
 			// Get a CvSink. This will capture Mats from the camera
@@ -240,7 +240,7 @@ public class Robot extends IterativeRobot
 		});
 
 		thread.setDaemon(true);
-		thread.start();
+		thread.start();*/
 		//CameraServer.getInstance().startAutomaticCapture("BackView", 1);
 	}
 	
@@ -248,7 +248,7 @@ public class Robot extends IterativeRobot
 	{
 		SmartDashboard.putString("DB/String 1", String.format("L Speed: %.3f", leftDrive.get()));
 		SmartDashboard.putString("DB/String 2", String.format("R Speed: %.3f", rightDrive.get()));
-		SmartDashboard.putString("DB/String 3", String.format("Distance: %.3f\"", sonar.getDistanceInInches()));
+		//SmartDashboard.putString("DB/String 3", String.format("Distance: %.3f\"", sonar.getDistanceInInches()));
 		SmartDashboard.putString("DB/String 4", String.format("Climber: %.3f", climber.get()));
 		SmartDashboard.putString("DB/String 5", String.format("L Encoder: %.3f\"", leftDriveEncoder.getDistance()));
 		SmartDashboard.putString("DB/String 6", String.format("R Encoder: %.3f\"", rightDriveEncoder.getDistance()));
@@ -272,7 +272,7 @@ public class Robot extends IterativeRobot
 	{
 		// get the selected autonomous
 		//autoSelected = autoChooser.getSelected();
-		autoSelected = SmartDashboard.getString("DB/String 0", "center");
+		autoSelected = SmartDashboard.getString("DB/String 0", "right");
 
 		// reset the encoders
 		leftDriveEncoder.reset();
@@ -296,7 +296,10 @@ public class Robot extends IterativeRobot
 		driverInfo();
 		driverCounter = 0;
 		
-		stopCamera = false;
+		timer.reset();
+		timer.start();
+		
+		//stopCamera = false;
 	}
 	/**
 	 * This function is called periodically during autonomous
@@ -313,29 +316,23 @@ public class Robot extends IterativeRobot
 		switch(autoSelected)
 		{
 		case "forward":
-			
 			// Drive for 2 seconds
-			if (timer.get() < 5.0) {
-				driveTrain.drive(.3, 0.0); // drive forwards half speed
+			if (timer.get() < 3.0) {
+				driveTrain.drive(.5, 0.0); // drive forwards half speed
 			} else {
 				driveTrain.drive(0.0, 0.0); // stop robot
 			}
 		break;
+		
 		case "left":
 			drive(111);
 			//turn(60);
 			turn(60, 1);
 			break;
-		case "right":
-			drive(111);
-			//turn(-60);
-			turn(60, -1);
-			break;
 		case "center":
-		default:
 			//drive forward onto lift inches, lift is 111
 			//drive(74.5);
-			driveGyro(73);
+			driveGyro(75);
 			//drive(30);
 			//turn(0);
 			/*double distance =20;
@@ -349,10 +346,38 @@ public class Robot extends IterativeRobot
 				System.out.println(distance);
 			}
 			driveTrain.drive(0, 0);*/
+			break;
+		case "right":
+			default:
+			//drive(111);
+			//turn(-60);
+			//turn(60, -1);
+			
+			if (timer.get() < 1.6) {
+				driveTrain.drive(.5, 0.0); 
+			}// drive forwards half speed
+			else if (timer.get() < 2.1)
+			{
+				driveTrain.drive(0, 0);
+			}
+				else if (timer.get() < 2.6)
+				{
+					//turn(60, -1);
+					rightDrive.set(-.4);
+					leftDrive.set(.4);
+				}
+			else if (timer.get() < 3.2){
+				driveTrain.drive(0.5, 0.0); // stop robot
+			}
+			else
+			{
+				driveTrain.drive(0, 0);
+			}
+			break;
 		}
 		
 		//if robot has already moved into position
-		if(inGeneralPosition)
+		/*if(inGeneralPosition)
 		{
 		//center robot on lift
 		if(turn && !forward && !atTarget)
@@ -404,7 +429,7 @@ public class Robot extends IterativeRobot
 			forward = false;
 			atTarget = true;
 		}
-		}
+		}*/
 		driverCounter++;
 		if (driverCounter == 3)
 		{
@@ -422,7 +447,7 @@ public class Robot extends IterativeRobot
 	public void teleopInit()
 	{
 		//Kill the camera thread to improve performace
-		stopCamera = true;
+		//stopCamera = true;
 		/*try { thread.wait();}
 		catch(InterruptedException e){e.printStackTrace();}*/
 		
@@ -499,8 +524,10 @@ public class Robot extends IterativeRobot
 	{
 		if (startDrive)
 		{
-			while(isAutonomous() && (Math.abs(rightDriveEncoder.getDistance()) < Math.abs(inches) || 
+			if((Math.abs(rightDriveEncoder.getDistance()) < Math.abs(inches) || 
 					Math.abs(leftDriveEncoder.getDistance()) < Math.abs(inches))){
+				
+				driverInfo();
 				double angle = gyro.getAngle();
 				
 				driveTrain.drive(0.4, -angle*0.03);
@@ -510,8 +537,12 @@ public class Robot extends IterativeRobot
 			//	distance = sonar.getDistanceInInches();
 			//System.out.println(distance);
 			}
+			else
+			{
 			driveTrain.drive(0, 0);
+			startDrive = false;
 				startTurn = true;
+			}
 		}
 	}
 	private boolean startTurn;
@@ -546,8 +577,8 @@ public class Robot extends IterativeRobot
 	public static boolean gyroUpdate = false;
 	public void turn(double degrees, int direction){
 		
-		if(startTurn)
-		{
+		//if(startTurn)
+		//{
 		
 		double angle = Math.abs(gyro.getAngle());
 		System.out.println("Before Angle: " + angle);
@@ -582,7 +613,7 @@ public class Robot extends IterativeRobot
 		System.out.println("Immediate Angle: " + gyro.getAngle());
 		Timer.delay(5);
 		System.out.println("After Angle: " + gyro.getAngle());
-		}
+		//}
 	}
 	
 	public void racing()
