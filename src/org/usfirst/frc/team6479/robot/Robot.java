@@ -55,7 +55,10 @@ public class Robot extends IterativeRobot
 	// the motor controllers for the drive train
 	Spark leftDrive;
 	Spark rightDrive;
+	Spark leftDriveSecond;
+	Spark rightDriveSecond;
 	CustomDrive driveTrain;
+	CustomDrive driveTrainSecond;
 	Victor climber;
 	
 	//timer for uto
@@ -102,10 +105,14 @@ public class Robot extends IterativeRobot
 		
 		leftDrive = new Spark(0);
 		rightDrive = new Spark(1);
+		leftDriveSecond = new Spark(3);
+		leftDriveSecond.setInverted(true);
+		rightDriveSecond = new Spark(4);
 		
 		// left drive is inverted since both motors are built identical
 		leftDrive.setInverted(true);
 		driveTrain = new CustomDrive(leftDrive, rightDrive);
+		driveTrainSecond = new CustomDrive(leftDriveSecond, rightDriveSecond);
 		
 		xbox = new XboxController(0);
 		
@@ -629,6 +636,7 @@ public class Robot extends IterativeRobot
 			turn=turn*-1;
 		}*/
 		driveTrain.arcadeDrive(turn, throttle);
+		driveTrainSecond.arcadeDrive(turn, throttle);
 	}
 	
 	
