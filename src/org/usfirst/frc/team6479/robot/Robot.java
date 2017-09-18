@@ -57,8 +57,9 @@ public class Robot extends IterativeRobot
 	Spark rightDrive;
 	Spark leftDriveSecond;
 	Spark rightDriveSecond;
+	MultiSpeedController left;
+	MultiSpeedController right;
 	CustomDrive driveTrain;
-	CustomDrive driveTrainSecond;
 	Victor climber;
 	
 	//timer for uto
@@ -76,17 +77,18 @@ public class Robot extends IterativeRobot
 	Encoder leftDriveEncoder;
 	Encoder rightDriveEncoder;
 	//init sonar
-	//RangeFinderAnalog sonar;
+	RangeFinderAnalog sonar;
+	RangeFinderAnalog sonar2;
 	
 	//init gyro
 	ADXRS450Gyro gyro;
 	
 	// camera thread
-	//Thread thread;
+	Thread thread;
 	private double centerX = 0.0;
 	private boolean turn = false;
 	private boolean inGeneralPosition;
-	//private boolean stopCamera;
+	private boolean stopCamera;
 	/**
 	 * This function is run when the robot is first started up and should be
 	 * used for any initialization code.
@@ -96,23 +98,25 @@ public class Robot extends IterativeRobot
 	public void robotInit()
 	{
 		timer = new Timer();
-		//stopCamera = false;
+		stopCamera = false;
 		
 		gyro = new ADXRS450Gyro();
 		gyro.startThread();
 
-		//sonar = new RangeFinderAnalog(0);
+		sonar = new RangeFinderAnalog(0);
+		sonar2 = new RangeFinderAnalog(1);
 		
 		leftDrive = new Spark(0);
 		rightDrive = new Spark(1);
 		leftDriveSecond = new Spark(3);
 		leftDriveSecond.setInverted(true);
 		rightDriveSecond = new Spark(4);
+		left = new MultiSpeedController(leftDrive, leftDriveSecond);
+		right = new MultiSpeedController(rightDrive, rightDriveSecond);
 		
 		// left drive is inverted since both motors are built identical
 		leftDrive.setInverted(true);
-		driveTrain = new CustomDrive(leftDrive, rightDrive);
-		driveTrainSecond = new CustomDrive(leftDriveSecond, rightDriveSecond);
+		driveTrain = new CustomDrive(left, right);
 		
 		xbox = new XboxController(0);
 		
@@ -178,11 +182,11 @@ public class Robot extends IterativeRobot
 		
 
 
-		//GripPipelineHSV grip = new GripPipelineHSV();
-		//UsbCamera camera = CameraServer.getInstance().startAutomaticCapture("FrontView", 0);
-		//camera.setResolution(320, 240);
+		GripPipelineHSV grip = new GripPipelineHSV();
+		UsbCamera camera = CameraServer.getInstance().startAutomaticCapture("FrontView", 0);
+		camera.setResolution(320, 240);
 
-		/*thread = new Thread(() ->
+		thread = new Thread(() ->
 		{
 			if(!stopCamera) {
 			// Get a CvSink. This will capture Mats from the camera
@@ -247,8 +251,8 @@ public class Robot extends IterativeRobot
 		});
 
 		thread.setDaemon(true);
-		thread.start();*/
-		//CameraServer.getInstance().startAutomaticCapture("BackView", 1);
+		thread.start();
+		CameraServer.getInstance().startAutomaticCapture("BackView", 1);
 	}
 	
 	public void driverInfo()
@@ -306,7 +310,7 @@ public class Robot extends IterativeRobot
 		timer.reset();
 		timer.start();
 		
-		//stopCamera = false;
+		stopCamera = false;
 	}
 	/**
 	 * This function is called periodically during autonomous
@@ -338,10 +342,10 @@ public class Robot extends IterativeRobot
 			break;
 		case "center":
 			//drive forward onto lift inches, lift is 111
-			//drive(74.5);
+			drive(74.5);
 			driveGyro(75);
-			//drive(30);
-			//turn(0);
+			drive(30);
+		//	turn(0);
 			/*double distance =20;
 			while(isAutonomous() && distance > 15){
 				double angle = gyro.getAngle();
@@ -484,6 +488,8 @@ public class Robot extends IterativeRobot
 	@Override
 	public void teleopPeriodic()
 	{
+		System.out.println("Sonar 1 Voltage " + sonar.getAverageVoltage() + "     Sonar 2 Voltage " + sonar2.getAverageVoltage());
+				
 		if(xbox.getBumper(Hand.kRight))
 		{
 			climber.set(Math.abs(xbox.getY(Hand.kRight)));
@@ -636,43 +642,7 @@ public class Robot extends IterativeRobot
 			turn=turn*-1;
 		}*/
 		driveTrain.arcadeDrive(turn, throttle);
-		driveTrainSecond.arcadeDrive(turn, throttle);
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	public void arcade()
 	{
