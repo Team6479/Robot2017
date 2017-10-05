@@ -1,3 +1,4 @@
-bin
-build
-dist
+#Build Locations
+/bin/
+/build/
+/dist/
